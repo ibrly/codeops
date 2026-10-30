@@ -1,0 +1,44 @@
+# Adding exercises and tracks
+
+This is the recipe for contributing learning content to CodeOps. It's based on how the [Foundations track](../tracks/foundations/exercises) is built, so that's the best example to copy from.
+
+## How an exercise works
+
+Every exercise is a tiny program with **one planted problem** and **tests that fail until the learner fixes it**. The learner never reads a lesson page first. They run the test, read the failure, and get coached through the fix with the hint ladder in [teaching/CONTRACT.md](../teaching/CONTRACT.md).
+
+That's why tests are the heart of every exercise. A test passing is the only thing that can mark an exercise as passed (see `bin/codeops-check`).
+
+## Add an exercise to Foundations
+
+1. **Pick one concept** a beginner gets wrong in a recognizable way. One exercise, one idea. If you need two bugs to explain it, it's two exercises.
+2. **Create the exercise folder** `tracks/foundations/exercises/NN-short-name/` with:
+   - `README.md`: the concept in 3 to 6 plain sentences, the goal, `node --test` to run it, and what "done" means. Look at [03-loops](../tracks/foundations/exercises/03-loops/README.md) for the shape. **Don't describe the bug.**
+   - The code file: a few lines, realistic, with the planted problem. Use the playlist theme (songs with `title`, `artist`, `seconds`) so exercises feel connected.
+   - A `*.test.js` file using only `node:test` and `node:assert`. Test the behavior, including an edge case where it matters.
+3. **Create the solution folder** `tracks/foundations/solutions/NN-short-name/` with:
+   - The fixed code file(s), with the same names as in the exercise.
+   - `NOTES.md` for contributors and maintainers: the planted bug, the lesson, the fixes you'd accept, and one good rung-3 hint. Learners never see this folder.
+4. **Verify it:**
+
+   ```bash
+   node scripts/verify-exercises.mjs
+   ```
+
+   This checks that your tests **fail** on the shipped code and **pass** with your solution. CI runs it on every pull request.
+5. **Try it as a learner** if you have Claude Code. In an empty folder, run `claude --plugin-dir <path-to-your-codeops-clone>`, then `/codeops:practice NN`. Does the tutor coach you to the fix without giving it away? If it doesn't, the exercise README or the planted bug probably needs to be clearer.
+
+Exercise numbers set the order learners see. If you insert one in the middle, renumber the folders after it in the same pull request.
+
+## Add a new track
+
+A track is a folder under `tracks/` with the same `exercises/` and `solutions/` structure. `scripts/verify-exercises.mjs` already checks every track.
+
+Before you build one, **open an issue** with the "New exercise or track" template so we can agree on the audience and the end goal. Then:
+
+1. Build **the whole first module** (5 or more exercises) before opening the pull request. Don't add placeholder exercises or empty folders. CodeOps only ships what works.
+2. Keep the same rules: one concept per exercise, tests as the source of truth, no dependencies beyond the language's standard tooling, and solutions kept separate.
+3. **Learner commands:** the helper scripts in `bin/` currently serve the Foundations track only. Your pull request will need to teach `codeops-exercise` and `codeops-check` about the new track, so mention in the issue that you'll need that, and a maintainer will help.
+
+## Search and fast-moving topics
+
+Foundations doesn't use web search: the fundamentals don't change, and the tutor never searches for an exercise's solution. Tracks on fast-moving tools (frameworks, cloud services, AI APIs) can point learners to **official documentation** only, such as MDN, nodejs.org, or a framework's own docs, and should date anything that's version-specific.

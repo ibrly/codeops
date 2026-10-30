@@ -20,5 +20,7 @@ jobs:
         run: node scripts/check-links.mjs
       - name: Verify exercises fail as shipped and pass with solutions
         run: node scripts/verify-exercises.mjs
+      - name: Validate plugin, skills, and agents
+        run: npx --yes @anthropic-ai/claude-code@2.1.314 plugin validate --strict .
       - name: Check learner data is gitignored
         run: grep -qxF '.codeops/' .gitignore

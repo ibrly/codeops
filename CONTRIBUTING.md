@@ -2,15 +2,12 @@
 
 Thanks for wanting to help! CodeOps is a project about learning, so first-time contributors are especially welcome. If you've never opened a pull request before, this is a fine place to start.
 
-## Where things stand
+## Good ways to help
 
-CodeOps is in early development (see the [README](README.md#roadmap)). Right now the most useful contributions are:
-
-- **Feedback on the plan** in [docs/mission.md](docs/mission.md): open an issue if something seems wrong, missing, or overbuilt.
-- **Ideas for Foundations exercises:** a small bug that teaches one concept well. Use the "New exercise or track" issue template.
-- **Fixes** to typos, unclear wording, or broken links.
-
-Once the Foundations module lands, adding exercises and tracks will be the main way to contribute, and there will be a written recipe for it.
+- **Try it as a learner and report friction.** Where did the tutor give too much away, ask too many questions, or confuse you? Open an issue. This is the most useful contribution right now.
+- **Add or improve an exercise.** Follow the recipe in [docs/adding-a-track.md](docs/adding-a-track.md).
+- **Improve the teaching contract** in [teaching/CONTRACT.md](teaching/CONTRACT.md). Changes here affect every lesson, so include an example conversation showing the problem and how your change fixes it.
+- **Fix** typos, unclear wording, or broken links.
 
 ## How to make a change
 
@@ -21,7 +18,10 @@ Once the Foundations module lands, adding exercises and tracks will be the main 
 
    ```bash
    node scripts/check-links.mjs
+   node scripts/verify-exercises.mjs
    ```
+
+   If you have Claude Code, also run `claude plugin validate --strict .`, and for changes to skills or the contract, `scripts/smoke-test.sh`. The smoke test runs real tutoring sessions headlessly with your own Claude login, so it isn't part of CI.
 
 5. **Open a pull request** and fill in the template. Small, clear PRs get reviewed fastest.
 

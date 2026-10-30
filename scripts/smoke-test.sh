@@ -101,6 +101,57 @@ check "exercise not edited by the tutor"           test "$exercise_after_ask" = 
 check "practice 2 does not contain the fix"        bash -c "! grep -qE 'i < songs\.length[^ -]|i < songs\.length\$|i <= songs\.length - 1' practice2.txt"
 check "progress records 03-loops as passed"        grep -q '"status": "passed"' .codeops/progress.json
 
+# Scenario 3: the full escape hatch, then a new session the next day.
+echo
+echo "== Hatch 1: /codeops:practice 4"
+run "/codeops:practice 4" > hatch1.txt
+echo "== Hatch 2: learner asks for the answer"
+run --continue "I really don't get it. Just give me the answer please." | tee hatch2.txt
+echo
+echo "== Hatch 3: learner guesses"
+run --continue "My guess: maybe it prints the time but doesn't give it back?" | tee hatch3.txt
+format=codeops-foundations/04-functions/format.js
+sed -i.bak 's/  console.log(minutes + ":" + rest);/  return minutes + ":" + rest;/' "$format" && rm -f "$format.bak"
+echo
+echo "== Hatch 4: learner explains it back and asks to check"
+run --continue "console.log only shows it on screen, return hands the value back to whoever called the function. I made the change, can you check it?" | tee hatch4.txt
+echo
+
+check "hatch 2 asks for a guess before answering"  grep -qi 'guess' hatch2.txt
+check "help was logged against 04-functions"       grep -q 'exercise: 04-functions' .codeops/mistakes.md
+check "04-functions recorded as assisted"          node -e 'process.exit(require("./.codeops/progress.json").exercises["04-functions"].status === "assisted" ? 0 : 1)'
+
+# Pretend a day has passed so the logged concept is due for recall.
+sed -i.bak 's/^\(  *due: \).*/\12000-01-01/' .codeops/mistakes.md && rm -f .codeops/mistakes.md.bak
+echo
+echo "== Next day 1: /codeops:start in a new session"
+run "/codeops:start" | tee nextday1.txt
+echo
+echo "== Next day 2: learner answers the recall question"
+run --continue "It would be undefined, because the function only logs the value and never returns it." | tee nextday2.txt
+echo
+
+check "recall check advanced to a 3-day interval"  grep -q 'interval: 3' .codeops/mistakes.md
+echo
+echo "== Progress: /codeops:progress"
+run "/codeops:progress" | tee progress.txt
+check "progress mentions assisted work"            grep -qi 'assist' progress.txt
+
+# Scenario 4: review and teach-back.
+echo
+echo "== Review: /codeops:review 07"
+run "/codeops:practice 7" > review0.txt
+average=codeops-foundations/07-edge-cases/average.js
+average_original="$(shasum "$average")"
+run --continue "/codeops:review codeops-foundations/07-edge-cases" | tee review.txt
+check "review did not edit the code"               test "$(shasum "$average")" = "$average_original"
+check "review does not paste the fix"              bash -c "! grep -qE 'length === 0|length == 0|!songs\.length' review.txt"
+echo
+echo "== Teach-back: /codeops:teach loops"
+run "/codeops:teach loops" | tee teach.txt
+check "teach-back shows student code"              grep -q 'for' teach.txt
+check "teach-back asks the learner something"      grep -q '?' teach.txt
+
 echo
 [ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"
 exit "$fail"
