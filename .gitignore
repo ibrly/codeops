@@ -1,0 +1,20 @@
+# Learner data: never commit
+.codeops/
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Env files
+.env
+.env.*

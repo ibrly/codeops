@@ -1,0 +1,22 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check Markdown links
+        run: node scripts/check-links.mjs
+      - name: Check learner data is gitignored
+        run: grep -qxF '.codeops/' .gitignore
