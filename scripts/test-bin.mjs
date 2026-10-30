@@ -152,3 +152,26 @@ test("the learner's own test still counts in the writing-tests exercise", () => 
   assert.match(r.out, /09-writing-tests passed/);
   assert.doesNotMatch(r.out, /NOTE:/);
 });
+
+test("a corrupted progress.json is never overwritten", () => {
+  const cwd = learner();
+  mkdirSync(join(cwd, ".codeops"));
+  writeFileSync(join(cwd, ".codeops", "progress.json"), "{bad");
+  for (const args of [["codeops-exercise", "3"], ["codeops-exercise", "--list"], ["codeops-check", "3"]]) {
+    const r = run(cwd, ...args);
+    assert.notStrictEqual(r.status, 0, args.join(" "));
+    assert.match(r.out, /isn't valid JSON/);
+  }
+  assert.strictEqual(readFileSync(join(cwd, ".codeops", "progress.json"), "utf8"), "{bad");
+});
+
+test("--taught records teach-back only for passed exercises and keeps other fields", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  assert.strictEqual(run(cwd, "codeops-exercise", "--taught", "3").status, 1);
+  solve(cwd, "foundations", "03-loops");
+  run(cwd, "codeops-check", "3");
+  const before = progress(cwd).tracks.foundations.exercises["03-loops"];
+  assert.match(run(cwd, "codeops-exercise", "--taught", "3").out, /taught back/);
+  assert.deepStrictEqual(progress(cwd).tracks.foundations.exercises["03-loops"], { ...before, taught: true });
+});
