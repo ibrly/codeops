@@ -127,3 +127,28 @@ test("codeops-repo works outside a git repository", () => {
   assert.match(r.out, /isn't a git repository/);
   assert.match(r.out, /unknown: ask the learner/);
 });
+
+test("editing a shipped test can't make an exercise pass", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  const testFile = join(cwd, "codeops-foundations", "03-loops", "total.test.js");
+  const weakened = readFileSync(testFile, "utf8").replace("330", "300").replace("200);", "0);");
+  writeFileSync(testFile, weakened);
+  const r = run(cwd, "codeops-check", "3");
+  assert.match(r.out, /03-loops failing/);
+  assert.match(r.out, /NOTE: your copy of total\.test\.js differs/);
+  assert.strictEqual(readFileSync(testFile, "utf8"), weakened, "the learner's file must be left as they wrote it");
+  assert.notStrictEqual(progress(cwd).tracks.foundations.exercises["03-loops"].status, "passed");
+});
+
+test("the learner's own test still counts in the writing-tests exercise", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "9");
+  const mine = join(cwd, "codeops-foundations", "09-writing-tests", "my.test.js");
+  writeFileSync(mine, 'require("node:test")("nothing", () => {});\n');
+  assert.match(run(cwd, "codeops-check", "9").out, /09-writing-tests failing/);
+  solve(cwd, "foundations", "09-writing-tests");
+  const r = run(cwd, "codeops-check", "9");
+  assert.match(r.out, /09-writing-tests passed/);
+  assert.doesNotMatch(r.out, /NOTE:/);
+});
