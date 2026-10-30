@@ -4,6 +4,7 @@
 //   codeops-exercise --tracks         every available track
 //   codeops-exercise --track <name>   switch the active track
 //   codeops-exercise --taught <id|n>  record that the learner taught this concept back
+//   codeops-exercise --reset <id|n>   back up the learner's copy to .codeops/backups/ and start fresh
 //   codeops-exercise <id|n>           set up an exercise (e.g. 03-loops or 3) and print its README
 const fs = require("node:fs");
 const path = require("node:path");
@@ -49,7 +50,7 @@ if (!arg || arg === "--list") {
   process.exit(0);
 }
 
-const wanted = arg === "--taught" ? value : arg;
+const wanted = ["--taught", "--reset"].includes(arg) ? value : arg;
 const n = String(wanted ?? "").padStart(2, "0");
 const id = track.ids.find((d) => d === wanted || d.startsWith(n + "-"));
 if (!id) {
@@ -70,6 +71,20 @@ if (arg === "--taught") {
 }
 
 const target = path.join(t.workspace(cwd, track.name), id);
+
+if (arg === "--reset") {
+  if (!fs.existsSync(target)) {
+    console.error(`${id} isn't set up yet, so there's nothing to reset.`);
+    process.exit(1);
+  }
+  const backups = path.join(t.ensureDataDir(cwd), "backups");
+  let n = 1;
+  while (fs.existsSync(path.join(backups, `${track.name}-${id}-${t.localDate()}-${n}`))) n++;
+  const backup = path.join(backups, `${track.name}-${id}-${t.localDate()}-${n}`);
+  fs.mkdirSync(backups, { recursive: true });
+  fs.renameSync(target, backup);
+  console.log(`Your previous attempt is saved in ${path.relative(cwd, backup)}/`);
+}
 // Keep caches from the learner's own test runs out of git if they commit their work.
 const ignore = path.join(t.workspace(cwd, track.name), ".gitignore");
 if (!fs.existsSync(ignore)) {

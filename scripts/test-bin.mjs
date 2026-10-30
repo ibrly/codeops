@@ -195,3 +195,23 @@ test("recall add rejects bad input and writes nothing", () => {
   assert.strictEqual(run(cwd, "codeops-recall", "add", "--concept", "x", "--how", "hint", "--exercise", "99").status, 1);
   assert.ok(!existsSync(join(cwd, ".codeops", "mistakes.md")));
 });
+
+test("--reset backs up the learner's attempt and restores the original", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  const file = join(cwd, "codeops-foundations", "03-loops", "total.js");
+  const shipped = readFileSync(join(root, "tracks", "foundations", "exercises", "03-loops", "total.js"), "utf8");
+  run(cwd, "codeops-check", "3");
+  const before = readFileSync(join(cwd, ".codeops", "progress.json"), "utf8");
+  writeFileSync(file, "// wrecked 1\n");
+  assert.match(run(cwd, "codeops-exercise", "--reset", "3").out, /previous attempt is saved/);
+  writeFileSync(file, "// wrecked 2\n");
+  run(cwd, "codeops-exercise", "--reset", "3");
+  assert.strictEqual(readFileSync(file, "utf8"), shipped);
+  const day = new Date();
+  const stamp = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+  const backups = join(cwd, ".codeops", "backups");
+  assert.strictEqual(readFileSync(join(backups, `foundations-03-loops-${stamp}-1`, "total.js"), "utf8"), "// wrecked 1\n");
+  assert.strictEqual(readFileSync(join(backups, `foundations-03-loops-${stamp}-2`, "total.js"), "utf8"), "// wrecked 2\n");
+  assert.strictEqual(readFileSync(join(cwd, ".codeops", "progress.json"), "utf8"), before);
+});
