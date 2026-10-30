@@ -4,7 +4,7 @@
 
 CodeOps is an open-source [Claude Code](https://code.claude.com/docs) plugin that teaches programming by making you think instead of handing you solutions. You fix small, deliberately broken programs, and an AI tutor coaches you to the answer one hint at a time.
 
-> **Status: v0.1, early.** The first track, Programming Foundations (JavaScript, 10 exercises), works end to end. Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
+> **Status: early.** Programming Foundations works end to end in two languages, JavaScript and Python, with 10 exercises each. Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
 
 ## Why CodeOps exists
 
@@ -19,7 +19,7 @@ CodeOps flips the default. The tutor:
 
 ## Quick start
 
-You need [Claude Code](https://code.claude.com/docs) (v2.1.275 or later) and [Node.js](https://nodejs.org/) 18 or later.
+You need [Claude Code](https://code.claude.com/docs) (v2.1.275 or later) and [Node.js](https://nodejs.org/) 18 or later, which the helper scripts run on. For the Python track you also need [Python](https://www.python.org/) 3.10 or later.
 
 1. **Install the plugin.** In Claude Code, run:
 
@@ -41,7 +41,7 @@ You need [Claude Code](https://code.claude.com/docs) (v2.1.275 or later) and [No
    /codeops:start
    ```
 
-The tutor asks about your goals and experience, then you're off. The first time it runs one of its helper commands (`codeops-check` to run your tests, `codeops-recall` to schedule a review), Claude Code asks for permission. Choose the option to allow it from now on.
+The tutor asks about your goals, your experience, and whether you want to learn with JavaScript or Python, then you're off. The first time it runs one of its helper commands (`codeops-check` to run your tests, `codeops-recall` to schedule a review), Claude Code asks for permission. Choose the option to allow it from now on.
 
 ## Commands
 
@@ -96,14 +96,14 @@ Note the <=. What does the very last line it prints show, and why?
 
 ## Programming Foundations
 
-Ten exercises about a small music-playlist program. Each one has one planted problem and tests that fail until you fix it:
+Ten exercises about a small music-playlist program, in **JavaScript** or **Python**. Each one has one planted problem and tests that fail until you fix it. The Python track swaps in Python's own pitfalls where the languages differ, like `list.sort()` returning `None`.
 
 1. Values and types
 2. Conditionals
 3. Loops
 4. Functions
-5. Arrays
-6. Objects
+5. Arrays (JavaScript) or lists (Python)
+6. Objects (JavaScript) or dictionaries (Python)
 7. Edge cases
 8. Reading error messages
 9. Writing your own test (your test has to catch a real bug)
@@ -113,7 +113,7 @@ Ten exercises about a small music-playlist program. Each one has one planted pro
 
 CodeOps keeps everything in the folder you learn in:
 
-- `codeops-foundations/`: your copies of the exercises
+- `codeops-foundations/` or `codeops-foundations-python/`: your copies of the exercises
 - `.codeops/`: your notes, progress, and the concepts you needed help with. This folder ignores itself in git, so it's never committed by accident.
 
 CodeOps itself sends nothing anywhere. Your conversations with the tutor go through Claude Code under its own terms.
@@ -127,7 +127,8 @@ teaching/CONTRACT.md      the tutor's rules: hint ladder, escape hatch, tone, li
 skills/<name>/SKILL.md    the /codeops:* commands; each loads the contract
 agents/code-reviewer.md   the reviewer subagent behind /codeops:review
 bin/                      helpers the tutor runs: set up exercises, run tests, schedule recall
-tracks/foundations/       exercises (shipped to learners) and solutions (for contributors)
+tracks/<track>/           track.json, exercises (shipped to learners), solutions (for contributors)
+lib/tracks.js             shared track and progress helpers
 scripts/                  checks: links, exercise verification, behavior smoke test
 ```
 
@@ -138,7 +139,6 @@ The behavior smoke test (`scripts/smoke-test.sh`) runs real tutoring sessions he
 Ideas, roughly in priority order. Each will become an issue when someone picks it up:
 
 - Learn from your own repo: coaching on real bugs and TODOs in your projects
-- A Python version of Foundations
 - A pre-commit hook that asks you to explain AI-written code before you commit it
 - More tracks (frontend, backend, and others), built by contributors following [the recipe](docs/adding-a-track.md)
 
