@@ -52,6 +52,7 @@ The tutor asks about your goals, your experience, and whether you want to learn 
 | `/codeops:review [path]` | A review of your code: up to three findings that point you at problems without fixing them |
 | `/codeops:progress` | Your honest progress: passed, assisted, and what's due for review |
 | `/codeops:teach [concept]` | Teach-back: the tutor plays a confused student, and you find and explain its mistake |
+| `/codeops:coach [file or error]` | Coaching on a bug or TODO in **your own project**. Run it from that project's folder. The tutor reads your code but never edits it or runs it: you run your own tests and paste the output |
 
 ## An example session
 
@@ -138,7 +139,6 @@ The behavior smoke test (`scripts/smoke-test.sh`) runs real tutoring sessions he
 
 Ideas, roughly in priority order. Each will become an issue when someone picks it up:
 
-- Learn from your own repo: coaching on real bugs and TODOs in your projects
 - A pre-commit hook that asks you to explain AI-written code before you commit it
 - More tracks (frontend, backend, and others), built by contributors following [the recipe](docs/adding-a-track.md)
 
