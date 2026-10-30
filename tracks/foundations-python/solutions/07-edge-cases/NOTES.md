@@ -1,0 +1,4 @@
+**Planted bug:** an empty playlist divides by `len([])`, which is 0, and raises `ZeroDivisionError`.
+**Lesson:** handle edge cases (empty input) deliberately.
+**Accepted fixes:** an early `return 0` when the list is empty (`if not songs`, `if len(songs) == 0`), or a conditional expression.
+**Good hint (rung 3):** "What is `len(songs)` when the playlist is empty?"

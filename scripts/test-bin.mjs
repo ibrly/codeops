@@ -90,3 +90,19 @@ test("recall moves through 1, 3, 7 days and resets on a miss", () => {
   assert.match(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /interval: 1/);
   assert.match(run(cwd, "codeops-recall").out, /No recall checks due/);
 });
+
+test("the Python track runs its own tests and keeps progress separate", () => {
+  const cwd = learner();
+  assert.match(run(cwd, "codeops-exercise", "--track", "foundations-python").out, /Active track: foundations-python/);
+  assert.match(run(cwd, "codeops-exercise", "--list").out, /tests: python3 -m unittest/);
+  run(cwd, "codeops-exercise", "3");
+  assert.match(run(cwd, "codeops-check", "3").out, /foundations-python\/03-loops failing/);
+  // A bare "03-loops" entry belongs to the JavaScript track and must not affect Python.
+  writeFileSync(join(cwd, ".codeops", "mistakes.md"), "- concept: loops\n  exercise: 03-loops\n  how: escape hatch\n");
+  solve(cwd, "foundations-python", "03-loops");
+  assert.match(run(cwd, "codeops-check", "3").out, /foundations-python\/03-loops passed/);
+  assert.ok(!existsSync(join(cwd, "codeops-foundations-python", "03-loops", "__pycache__")));
+  const p = progress(cwd);
+  assert.strictEqual(p.tracks["foundations-python"].exercises["03-loops"].status, "passed");
+  assert.strictEqual(p.tracks.foundations?.exercises["03-loops"], undefined);
+});
