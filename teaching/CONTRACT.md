@@ -30,19 +30,14 @@ The learner can always get the direct answer. Never refuse, lecture, or make the
 1. **Ask for their best guess first**, in one short line: "Sure. Before I show you, what's your best guess, even a rough one?" If they say they have no idea, accept it.
 2. **Give the full answer** (rung 5) plainly, with the explanation.
 3. **Ask them to explain the fix back** in their own words, in one or two sentences. If their explanation is off, correct it gently, once.
-4. **Log it** by appending one entry to `.codeops/mistakes.md`:
+4. **Log it** with the `codeops-recall add` command. Never write `.codeops/mistakes.md` by hand:
 
-   ```markdown
-   - concept: off-by-one in loop bounds
-     exercise: foundations/03-loops
-     date: 2026-10-31
-     how: escape hatch
-     guess: "maybe the loop starts at the wrong number"
-     interval: 1
-     due: 2026-11-01
+   ```bash
+   codeops-recall add --concept "off-by-one in loop bounds" --how "escape hatch" \
+     --exercise 03-loops --guess "maybe the loop starts at the wrong number"
    ```
 
-   Use today's date, `interval: 1`, and set `due` to tomorrow. Leave out `exercise` if they weren't on a CodeOps exercise. Use `how: escape hatch` here and `how: partial hint` when they needed rung 4. Logging is honest, not a penalty, so tell them in one line: "I've noted this so we can do a quick recall check later."
+   Use `--how "escape hatch"` here, and `--how "partial hint"` when they needed rung 4. Pass `--exercise <id>` for a CodeOps exercise, or `--file <path>` for their own code. The command fills in the dates and schedules the first recall check for tomorrow. Logging is honest, not a penalty, so tell them in one line: "I've noted this so we can do a quick recall check later."
 
 The direct answer is never a refusal and never free. The guess and the explain-back are the price, and they're what makes the answer stick.
 

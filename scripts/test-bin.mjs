@@ -175,3 +175,23 @@ test("--taught records teach-back only for passed exercises and keeps other fiel
   assert.match(run(cwd, "codeops-exercise", "--taught", "3").out, /taught back/);
   assert.deepStrictEqual(progress(cwd).tracks.foundations.exercises["03-loops"], { ...before, taught: true });
 });
+
+test("recall add logs help deterministically and makes a pass assisted", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "4");
+  const add = run(cwd, "codeops-recall", "add", "--concept", "return vs print", "--how", "escape hatch", "--exercise", "4", "--guess", "it prints it");
+  assert.strictEqual(add.status, 0, add.out);
+  const log = readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8");
+  assert.match(log, /exercise: foundations\/04-functions/);
+  assert.match(log, /interval: 1/);
+  assert.match(run(cwd, "codeops-recall").out, /No recall checks due/, "the first check is due tomorrow, not today");
+  solve(cwd, "foundations", "04-functions");
+  assert.match(run(cwd, "codeops-check", "4").out, /04-functions assisted/);
+});
+
+test("recall add rejects bad input and writes nothing", () => {
+  const cwd = learner();
+  assert.strictEqual(run(cwd, "codeops-recall", "add", "--concept", "x", "--how", "magic").status, 1);
+  assert.strictEqual(run(cwd, "codeops-recall", "add", "--concept", "x", "--how", "hint", "--exercise", "99").status, 1);
+  assert.ok(!existsSync(join(cwd, ".codeops", "mistakes.md")));
+});

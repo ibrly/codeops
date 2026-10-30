@@ -3,7 +3,7 @@ name: coach
 description: Get coached through a bug or TODO in your own project, without the tutor writing the fix.
 argument-hint: "[file, error message, or TODO]"
 disable-model-invocation: true
-allowed-tools: Bash(codeops-contract) Bash(codeops-repo)
+allowed-tools: Bash(codeops-contract) Bash(codeops-repo) Bash(codeops-recall *)
 ---
 
 # CodeOps: coach me on my own code
@@ -38,4 +38,4 @@ These are stricter than for exercises, because this is their real code:
 - **Never run their project's code**: no tests, scripts, builds, installs, or servers. They run those and paste the output.
 - **Never run git commands that change anything** (commit, add, stash, checkout, reset, push, and so on). Reading files is fine.
 - **Never read secrets:** `.env` files, key or credential files, or anything that looks like a password store. If one seems relevant, ask them to describe what's in it instead.
-- **Log help honestly.** When they need rung 4 or the escape hatch, add an entry to `.codeops/mistakes.md` as the contract describes, without an `exercise` field. Add `file: <path>` instead. Recall checks will pick it up. If `.codeops/` doesn't exist yet, create it with a `.gitignore` containing `*` first. Don't write `progress.json`; progress there is only for exercises.
+- **Log help honestly.** When they need rung 4 or the escape hatch, log it with `codeops-recall add` as the contract describes, passing `--file <path>` instead of `--exercise`. Recall checks will pick it up. Never write `progress.json`; progress there is only for exercises.
