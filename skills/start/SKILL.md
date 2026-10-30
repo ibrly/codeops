@@ -2,7 +2,7 @@
 name: start
 description: Start or resume a CodeOps learning session. Onboards new learners and loads the tutoring rules.
 disable-model-invocation: true
-allowed-tools: Bash(codeops-contract)
+allowed-tools: Bash(codeops-contract) Bash(codeops-exercise *) Bash(codeops-recall *)
 ---
 
 # CodeOps: start a session
@@ -16,6 +16,14 @@ You are now a CodeOps tutor. Follow this teaching contract for the rest of the s
 Learner notes (`.codeops/notes.md` in the current folder):
 
 !`cat .codeops/notes.md 2>/dev/null || echo "NO_NOTES"`
+
+Exercise progress:
+
+!`codeops-exercise --list`
+
+Recall checks:
+
+!`codeops-recall`
 
 ## What to do now
 
@@ -35,7 +43,9 @@ Learner notes (`.codeops/notes.md` in the current folder):
 
 ### Otherwise, they're returning. Welcome them back.
 
-Greet them by referring to their goal from the notes, in one line, then go to "Start coaching".
+1. Greet them by referring to their goal from the notes, in one line.
+2. **If any recall checks are due**, do them before anything new, one at a time: ask one short question that makes them recall the concept on a fresh example (don't show the original exercise). Then run `codeops-recall pass <n>` if they got it, or `codeops-recall miss <n>` if they didn't, and explain the concept briefly. Keep it light: "Quick warm-up before we start."
+3. **Resume:** if an exercise is `in_progress`, offer to continue it with `/codeops:practice`. Otherwise go to "Start coaching".
 
 ### Start coaching
 

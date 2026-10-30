@@ -1,0 +1,61 @@
+#!/usr/bin/env node
+// Spaced-repetition bookkeeping for .codeops/mistakes.md, so no one does date math by hand.
+//   codeops-recall              list entries due today or earlier, numbered
+//   codeops-recall pass <n>     learner recalled entry n: next interval (1 -> 3 -> 7 -> 14 days)
+//   codeops-recall miss <n>     learner missed entry n: back to 1 day
+const fs = require("node:fs");
+const path = require("node:path");
+
+const file = path.join(process.cwd(), ".codeops", "mistakes.md");
+const steps = [1, 3, 7, 14];
+
+function localDate(offsetDays = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
+// Each entry starts with "- " at the beginning of a line; anything before the first one is kept as-is.
+const parts = text.split(/^(?=- )/m);
+const head = parts[0].startsWith("- ") ? "" : parts.shift();
+const field = (entry, name) => entry.match(new RegExp(`^\\s*-?\\s*${name}:\\s*(.+)$`, "m"))?.[1].trim();
+const today = localDate();
+
+const [action, nArg] = process.argv.slice(2);
+
+if (!action) {
+  const due = parts
+    .map((entry, i) => ({ n: i + 1, entry }))
+    .filter(({ entry }) => (field(entry, "due") ?? "9999") <= today);
+  console.log(`Today: ${today}`);
+  if (!due.length) {
+    console.log("No recall checks due.");
+  } else {
+    console.log(`${due.length} recall check(s) due:`);
+    for (const { n, entry } of due) {
+      const exercise = field(entry, "exercise");
+      console.log(`  #${n}  ${field(entry, "concept")}${exercise ? ` (from ${exercise})` : ""}, due ${field(entry, "due")}`);
+    }
+  }
+  process.exit(0);
+}
+
+const n = Number(nArg);
+if (!["pass", "miss"].includes(action) || !Number.isInteger(n) || n < 1 || n > parts.length) {
+  console.error("Usage: codeops-recall [pass|miss <entry number>]");
+  process.exit(1);
+}
+
+let entry = parts[n - 1];
+const current = Number(field(entry, "interval")) || 1;
+const next = action === "pass" ? (steps.find((s) => s > current) ?? steps.at(-1)) : 1;
+const setField = (e, name, value) =>
+  new RegExp(`^\\s*${name}:`, "m").test(e)
+    ? e.replace(new RegExp(`^(\\s*)${name}:.*$`, "m"), `$1${name}: ${value}`)
+    : e.replace(/\n?$/, `\n  ${name}: ${value}\n`);
+entry = setField(entry, "interval", next);
+entry = setField(entry, "due", localDate(next));
+parts[n - 1] = entry;
+fs.writeFileSync(file, head + parts.join(""));
+console.log(`#${n} ${field(entry, "concept")}: ${action === "pass" ? "recalled" : "missed"}. Next check in ${next} day(s), on ${localDate(next)}.`);
