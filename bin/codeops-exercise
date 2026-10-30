@@ -1,64 +1,71 @@
 #!/usr/bin/env node
-// Lists Foundations exercises, or copies one into the learner's folder and prints its README.
-//   codeops-exercise --list     show every exercise with its status and the next one to do
-//   codeops-exercise <id|n>     set up an exercise (e.g. 03-loops or 3) in ./codeops-foundations/
+// Lists exercises, switches tracks, or copies an exercise into the learner's folder.
+//   codeops-exercise --list           exercises in the active track, with status and the next one
+//   codeops-exercise --tracks         every available track
+//   codeops-exercise --track <name>   switch the active track
+//   codeops-exercise <id|n>           set up an exercise (e.g. 03-loops or 3) and print its README
 const fs = require("node:fs");
 const path = require("node:path");
+const t = require(path.join(__dirname, "..", "lib", "tracks.js"));
 
-const track = "foundations";
-const source = path.join(__dirname, "..", "tracks", track, "exercises");
-const workspace = path.join(process.cwd(), `codeops-${track}`);
-const dataDir = path.join(process.cwd(), ".codeops");
-const progressFile = path.join(dataDir, "progress.json");
+const cwd = process.cwd();
+const [arg, value] = process.argv.slice(2);
+const progress = t.readProgress(cwd);
 
-const ids = fs.readdirSync(source).filter((d) => /^\d\d-/.test(d)).sort();
-
-function readProgress() {
-  try {
-    return JSON.parse(fs.readFileSync(progressFile, "utf8"));
-  } catch {
-    return { exercises: {} };
+if (arg === "--tracks") {
+  for (const name of t.listTracks()) {
+    const track = t.loadTrack(name);
+    console.log(`${name === t.activeTrack(progress) ? "→" : " "} ${name.padEnd(20)} ${track.title} · ${track.language}`);
   }
-}
-
-function resolveId(arg) {
-  const n = String(arg).padStart(2, "0");
-  return ids.find((id) => id === arg || id.startsWith(n + "-"));
-}
-
-const arg = process.argv[2];
-
-if (!arg || arg === "--list") {
-  const progress = readProgress().exercises;
-  const next = ids.find((id) => !["passed", "assisted"].includes(progress[id]?.status));
-  for (const id of ids) {
-    const p = progress[id];
-    const status = p ? `${p.status}${p.attempts ? `, ${p.attempts} test run(s)` : ""}` : "not started";
-    console.log(`${id === next ? "→" : " "} ${id.padEnd(20)} ${status}`);
-  }
-  console.log(next ? `\nNext exercise: ${next}` : "\nAll exercises are done.");
   process.exit(0);
 }
 
-const id = resolveId(arg);
+if (arg === "--track") {
+  if (!value || !t.loadTrack(value)) {
+    console.error(`No track "${value ?? ""}". Available: ${t.listTracks().join(", ")}`);
+    process.exit(1);
+  }
+  progress.track = value;
+  t.trackExercises(progress, value);
+  t.writeProgress(cwd, progress);
+  const track = t.loadTrack(value);
+  console.log(`Active track: ${value} (${track.title} · ${track.language})`);
+  process.exit(0);
+}
+
+const track = t.loadTrack(t.activeTrack(progress));
+const done = progress.tracks[track.name]?.exercises ?? {};
+
+if (!arg || arg === "--list") {
+  console.log(`Track: ${track.name} · ${track.title} · tests: ${track.test.join(" ")}\n`);
+  const next = track.ids.find((id) => !["passed", "assisted"].includes(done[id]?.status));
+  for (const id of track.ids) {
+    const p = done[id];
+    const status = p ? `${p.status}${p.attempts ? `, ${p.attempts} test run(s)` : ""}${p.taught ? ", taught" : ""}` : "not started";
+    console.log(`${id === next ? "→" : " "} ${id.padEnd(20)} ${status}`);
+  }
+  console.log(next ? `\nNext exercise: ${next}` : "\nAll exercises in this track are done.");
+  process.exit(0);
+}
+
+const n = String(arg).padStart(2, "0");
+const id = track.ids.find((d) => d === arg || d.startsWith(n + "-"));
 if (!id) {
-  console.error(`No exercise "${arg}". Run codeops-exercise --list to see them.`);
+  console.error(`No exercise "${arg}" in ${track.name}. Run codeops-exercise --list to see them.`);
   process.exit(1);
 }
 
-const target = path.join(workspace, id);
+const target = path.join(t.workspace(cwd, track.name), id);
 if (fs.existsSync(target)) {
-  console.log(`Already set up at ${path.relative(process.cwd(), target)}/ (your changes are kept).`);
+  console.log(`Already set up at ${path.relative(cwd, target)}/ (your changes are kept).`);
 } else {
-  fs.cpSync(path.join(source, id), target, { recursive: true });
-  console.log(`Set up ${id} at ${path.relative(process.cwd(), target)}/`);
+  fs.cpSync(path.join(track.exercises, id), target, { recursive: true });
+  console.log(`Set up ${id} at ${path.relative(cwd, target)}/`);
 }
 
-fs.mkdirSync(dataDir, { recursive: true });
-if (!fs.existsSync(path.join(dataDir, ".gitignore"))) fs.writeFileSync(path.join(dataDir, ".gitignore"), "*\n");
-const progress = readProgress();
-progress.exercises[id] ??= { status: "in_progress", attempts: 0 };
-fs.writeFileSync(progressFile, JSON.stringify(progress, null, 2) + "\n");
+t.trackExercises(progress, track.name)[id] ??= { status: "in_progress", attempts: 0 };
+t.writeProgress(cwd, progress);
 
+console.log(`Run its tests from that folder with: ${track.test.join(" ")}`);
 console.log(`Files: ${fs.readdirSync(target).join(", ")}\n`);
 console.log(fs.readFileSync(path.join(target, "README.md"), "utf8"));

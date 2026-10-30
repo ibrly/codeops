@@ -9,11 +9,7 @@ const path = require("node:path");
 const file = path.join(process.cwd(), ".codeops", "mistakes.md");
 const steps = [1, 3, 7, 14];
 
-function localDate(offsetDays = 0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+const { localDate } = require(path.join(__dirname, "..", "lib", "tracks.js"));
 
 const text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
 // Each entry starts with "- " at the beginning of a line; anything before the first one is kept as-is.

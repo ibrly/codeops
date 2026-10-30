@@ -1,0 +1,6 @@
+{
+  "title": "Programming Foundations",
+  "language": "JavaScript",
+  "test": ["node", "--test"],
+  "capstone": "10-capstone"
+}

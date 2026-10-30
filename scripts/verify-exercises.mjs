@@ -4,47 +4,48 @@
 import { readdirSync, existsSync, mkdtempSync, cpSync, rmSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 
 const root = resolve(dirname(new URL(import.meta.url).pathname), "..");
-const tracks = join(root, "tracks");
-
-function runTests(dir) {
-  return spawnSync(process.execPath, ["--test"], { cwd: dir, encoding: "utf8" }).status;
-}
+const t = createRequire(import.meta.url)(join(root, "lib", "tracks.js"));
 
 let failures = 0;
 let checked = 0;
+const fail = (where, problems) => {
+  failures++;
+  console.error(`FAIL  ${where}: ${problems.join("; ")}`);
+};
 
-for (const track of readdirSync(tracks)) {
-  const exercises = join(tracks, track, "exercises");
-  if (!existsSync(exercises)) continue;
-  for (const id of readdirSync(exercises).sort()) {
-    const solution = join(tracks, track, "solutions", id);
+for (const name of readdirSync(join(root, "tracks"))) {
+  const track = t.loadTrack(name);
+  if (!track) {
+    fail(`tracks/${name}`, ["no track.json"]);
+    continue;
+  }
+  for (const id of track.ids) {
+    const solution = join(track.dir, "solutions", id);
     const work = mkdtempSync(join(tmpdir(), "codeops-verify-"));
-    cpSync(join(exercises, id), work, { recursive: true });
+    cpSync(join(track.exercises, id), work, { recursive: true });
 
     const problems = [];
+    const shipped = t.runTests(track, work);
+    if (shipped.missing) problems.push(shipped.output);
+    else if (shipped.status === 0) problems.push("tests pass on the shipped code (nothing to fix)");
     if (!existsSync(solution)) problems.push("no solution folder");
-    if (runTests(work) === 0) problems.push("tests pass on the shipped code (nothing to fix)");
-    if (existsSync(solution)) {
+    else if (!shipped.missing) {
       cpSync(solution, work, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") });
-      if (runTests(work) !== 0) problems.push("tests fail on the reference solution");
+      if (t.runTests(track, work).status !== 0) problems.push("tests fail on the reference solution");
     }
     rmSync(work, { recursive: true, force: true });
 
     checked++;
-    if (problems.length) {
-      failures++;
-      console.error(`FAIL  ${track}/${id}: ${problems.join("; ")}`);
-    } else {
-      console.log(`ok    ${track}/${id}`);
-    }
+    if (problems.length) fail(`${name}/${id}`, problems);
+    else console.log(`ok    ${name}/${id}`);
   }
 }
 
 if (failures) {
-  console.error(`\n${failures} of ${checked} exercise(s) failed verification.`);
+  console.error(`\n${failures} problem(s) across ${checked} exercise(s).`);
   process.exit(1);
 }
 console.log(`\nAll ${checked} exercise(s) verified.`);
