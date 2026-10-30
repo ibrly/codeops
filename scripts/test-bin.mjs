@@ -51,6 +51,7 @@ test("setting up an exercise never overwrites the learner's work", () => {
   assert.match(run(cwd, "codeops-exercise", "3").out, /changes are kept/);
   assert.strictEqual(readFileSync(file, "utf8"), "// mine\n");
   assert.ok(existsSync(join(cwd, ".codeops", ".gitignore")));
+  assert.match(readFileSync(join(cwd, "codeops-foundations", ".gitignore"), "utf8"), /__pycache__\//);
 });
 
 test("only a passing test run marks an exercise passed", () => {

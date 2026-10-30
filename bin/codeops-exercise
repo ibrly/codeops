@@ -56,6 +56,12 @@ if (!id) {
 }
 
 const target = path.join(t.workspace(cwd, track.name), id);
+// Keep caches from the learner's own test runs out of git if they commit their work.
+const ignore = path.join(t.workspace(cwd, track.name), ".gitignore");
+if (!fs.existsSync(ignore)) {
+  fs.mkdirSync(path.dirname(ignore), { recursive: true });
+  fs.writeFileSync(ignore, "__pycache__/\nnode_modules/\n");
+}
 if (fs.existsSync(target)) {
   console.log(`Already set up at ${path.relative(cwd, target)}/ (your changes are kept).`);
 } else {

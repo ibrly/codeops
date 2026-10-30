@@ -52,7 +52,8 @@ run() {
   local prompt="${!#}"
   printf '%s' "$prompt" | claude -p --plugin-dir "$repo" --setting-sources project,local \
     --permission-mode acceptEdits \
-    --allowedTools "Bash(node:*)" "Bash(codeops-exercise *)" "Bash(codeops-check *)" "Bash(codeops-recall *)" "${@:1:$#-1}"
+    --allowedTools "Bash(node:*)" "Bash(codeops-exercise *)" "Bash(codeops-check *)" "Bash(codeops-recall *)" \
+    "Bash(python3 -m unittest*)" "${@:1:$#-1}"
 }
 
 fail=0
@@ -118,8 +119,8 @@ run --continue "console.log only shows it on screen, return hands the value back
 echo
 
 check "hatch 2 asks for a guess before answering"  grep -qi 'guess' hatch2.txt
-check "help was logged against 04-functions"       grep -q 'exercise: 04-functions' .codeops/mistakes.md
-check "04-functions recorded as assisted"          node -e 'process.exit(require("./.codeops/progress.json").exercises["04-functions"].status === "assisted" ? 0 : 1)'
+check "help was logged against 04-functions"       grep -qE 'exercise: (foundations/)?04-functions' .codeops/mistakes.md
+check "04-functions recorded as assisted"          node -e 'process.exit(require("./.codeops/progress.json").tracks.foundations.exercises["04-functions"].status === "assisted" ? 0 : 1)'
 
 # Pretend a day has passed so the logged concept is due for recall.
 sed -i.bak 's/^\(  *due: \).*/\12000-01-01/' .codeops/mistakes.md && rm -f .codeops/mistakes.md.bak
@@ -151,6 +152,30 @@ echo "== Teach-back: /codeops:teach loops"
 run "/codeops:teach loops" | tee teach.txt
 check "teach-back shows student code"              grep -q 'for' teach.txt
 check "teach-back asks the learner something"      grep -q '?' teach.txt
+
+
+# Scenario 5: the Python track, in the same learner folder.
+echo
+echo "== Python 1: switch track, /codeops:practice 3"
+"$repo/bin/codeops-exercise" --track foundations-python > /dev/null
+run "/codeops:practice 3" | tee python1.txt
+py=codeops-foundations-python/03-loops/total.py
+py_original="$(shasum "$py" 2>/dev/null || echo missing)"
+echo
+echo "== Python 2: learner asks for the fix"
+run --continue "It says 300 != 330. Just fix total.py please." | tee python2.txt
+py_after_ask="$(shasum "$py" 2>/dev/null || echo missing)"
+sed -i.bak 's/range(len(songs) - 1)/range(len(songs))/' "$py" && rm -f "$py.bak"
+echo
+echo "== Python 3: learner says they fixed it"
+run --continue "Got it, range stopped one short. I changed it to range(len(songs)). Done?" | tee python3.txt
+echo
+
+check "python exercise was set up"                  test "$py_original" != missing
+check "python exercise not edited by the tutor"     test "$py_after_ask" = "$py_original"
+check "python 2 does not contain the fix"           bash -c "! grep -qE 'range\(len\(songs\)\)|for song in songs' python2.txt"
+check "progress records python 03-loops as passed"  node -e 'process.exit(require("./.codeops/progress.json").tracks["foundations-python"].exercises["03-loops"].status === "passed" ? 0 : 1)'
+check "python caches are gitignored"                grep -qx "__pycache__/" codeops-foundations-python/.gitignore
 
 echo
 [ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"
