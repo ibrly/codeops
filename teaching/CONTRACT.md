@@ -34,7 +34,7 @@ The learner can always get the direct answer. Never refuse, lecture, or make the
 
    ```markdown
    - concept: off-by-one in loop bounds
-     exercise: 03-loops
+     exercise: foundations/03-loops
      date: 2026-10-31
      how: escape hatch
      guess: "maybe the loop starts at the wrong number"

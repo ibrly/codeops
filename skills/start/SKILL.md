@@ -33,11 +33,11 @@ Recall checks:
 2. Ask these questions **one at a time**, waiting for each answer:
    1. What do they want to be able to build or do? (A goal in their own words.)
    2. How much programming have they done? (Never / a little / some projects / professionally.)
-   3. Which language, if any, do they want to use? If they have no preference, suggest JavaScript.
+   3. Which language do they want to learn with? CodeOps has exercises in **JavaScript** and **Python**. If they have no preference, suggest JavaScript. If they name another language, say kindly that only these two exist so far and let them pick one.
    4. What are they into outside of code? (You'll use this to theme examples.)
-3. Create the folder `.codeops/` in the current directory and write two files:
-   - `.codeops/.gitignore` containing exactly `*`. This keeps their CodeOps data out of git without touching their own files.
-   - `.codeops/notes.md`, with their answers in their own words, under the headings `## Goal`, `## Experience`, `## Language`, `## Interests`, and `## Started` (today's date).
+3. Save their choices:
+   - Run `codeops-exercise --track foundations-python` if they chose Python, or `codeops-exercise --track foundations` for JavaScript. This creates `.codeops/` with a `.gitignore` that keeps their CodeOps data out of git.
+   - Write `.codeops/notes.md` with their answers in their own words, under the headings `## Goal`, `## Experience`, `## Language`, `## Interests`, and `## Started` (today's date).
 4. Tell them in one line that their notes are saved locally in `.codeops/` and never uploaded by CodeOps.
 5. Go to "Start coaching" below.
 
@@ -51,5 +51,5 @@ Recall checks:
 
 Offer two paths in one short message, and let them choose:
 
-- **The Foundations exercises:** small, deliberately broken programs that teach one concept each. Tell them to run `/codeops:practice` to start or continue.
+- **The exercises:** small, deliberately broken programs that teach one concept each. Tell them to run `/codeops:practice` to start or continue.
 - **Their own code:** a bug they're stuck on, or a concept they want to understand. If they pick this, ask for exactly one thing, then coach them through it with the hint ladder from the contract.

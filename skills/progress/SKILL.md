@@ -28,7 +28,7 @@ allowed-tools: Bash(codeops-exercise *) Bash(codeops-recall)
 Summarize the learner's progress in a short, honest, encouraging message. Don't run any other commands.
 
 - **Done:** how many exercises are `passed`, and how many `assisted`. Explain `assisted` in one neutral line: they got there with the direct answer, so it's worth revisiting, and that's normal.
-- **Foundations complete?** Only if `10-capstone` is `passed`. Not if it's `assisted` or anything else.
+- **Track complete?** Only if the active track's `10-capstone` is `passed`. Not if it's `assisted` or anything else.
 - **Strengths:** name one or two concepts they handled without help.
 - **To revisit:** concepts from the help log, and any recall checks due now.
 - **Next step:** one concrete suggestion: the next exercise (`/codeops:practice`), a due recall check (`/codeops:start` runs it), or `/codeops:teach` on something they've passed.

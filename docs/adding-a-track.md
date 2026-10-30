@@ -31,13 +31,28 @@ Exercise numbers set the order learners see. If you insert one in the middle, re
 
 ## Add a new track
 
-A track is a folder under `tracks/` with the same `exercises/` and `solutions/` structure. `scripts/verify-exercises.mjs` already checks every track.
+A track is a folder under `tracks/` with a `track.json`, an `exercises/` folder, and a `solutions/` folder. The helper scripts and `scripts/verify-exercises.mjs` discover tracks automatically, so **you don't need to change anything in `bin/`**.
 
-Before you build one, **open an issue** with the "New exercise or track" template so we can agree on the audience and the end goal. Then:
+`track.json` has exactly four keys:
+
+```json
+{
+  "title": "Programming Foundations (Python)",
+  "language": "Python",
+  "test": ["python3", "-m", "unittest"],
+  "capstone": "10-capstone"
+}
+```
+
+- `test` is the command that runs an exercise's tests, written as a list of arguments (never a shell string). It runs from inside the exercise folder and must exit 0 only when every test passes.
+- `capstone` is the id of the exercise that, passed without the escape hatch, completes the track.
+
+Before you build a track, **open an issue** with the "New exercise or track" template so we can agree on the audience and the end goal. Then:
 
 1. Build **the whole first module** (5 or more exercises) before opening the pull request. Don't add placeholder exercises or empty folders. CodeOps only ships what works.
 2. Keep the same rules: one concept per exercise, tests as the source of truth, no dependencies beyond the language's standard tooling, and solutions kept separate.
-3. **Learner commands:** the helper scripts in `bin/` currently serve the Foundations track only. Your pull request will need to teach `codeops-exercise` and `codeops-check` about the new track, so mention in the issue that you'll need that, and a maintainer will help.
+3. If the track's language isn't already installed in CI, add a setup step for it to `.github/workflows/validate.yml` so `verify-exercises` can run its tests.
+4. Mention the track in the onboarding language question in `skills/start/SKILL.md`.
 
 ## Search and fast-moving topics
 
