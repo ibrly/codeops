@@ -18,5 +18,7 @@ jobs:
           node-version: 20
       - name: Check Markdown links
         run: node scripts/check-links.mjs
+      - name: Verify exercises fail as shipped and pass with solutions
+        run: node scripts/verify-exercises.mjs
       - name: Check learner data is gitignored
         run: grep -qxF '.codeops/' .gitignore
