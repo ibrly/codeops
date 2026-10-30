@@ -13,7 +13,7 @@ AI coding assistants are very good at writing code for you. That's great when yo
 CodeOps flips the default. The tutor:
 
 - **Climbs a hint ladder.** It asks clarifying questions first, then points to where the problem is, then gives a small hint, then a partial fix, and only then the full answer.
-- **Lets you ask for the answer, at a small honest cost.** You give your best guess first and explain the fix back afterward, and the concept is scheduled for a quick recall check. You're never trapped, but skipping the thinking isn't free.
+- **Lets you ask for the answer, at a small honest cost.** You give your best guess first and explain the fix back afterward, and the concept is scheduled for quick recall checks that space out from a day to a month, then retire once you've clearly got it. You're never trapped, but skipping the thinking isn't free.
 - **Measures progress with evidence.** An exercise counts as passed only when its tests pass. If you needed the direct answer, it's recorded as *assisted*, not passed.
 - **Never edits your code.** It reads your files and runs your tests. You write every fix.
 

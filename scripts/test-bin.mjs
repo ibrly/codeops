@@ -78,7 +78,7 @@ test("--track rejects unknown tracks", () => {
   assert.match(r.out, /No track "nope"/);
 });
 
-test("recall moves through 1, 3, 7 days and resets on a miss", () => {
+test("recall moves through 1, 3, 7 days and resets on a miss (original schedule)", () => {
   const cwd = learner();
   mkdirSync(join(cwd, ".codeops"));
   writeFileSync(join(cwd, ".codeops", "mistakes.md"), "- concept: loops\n  interval: 1\n  due: 2000-01-01\n");
@@ -214,4 +214,43 @@ test("--reset backs up the learner's attempt and restores the original", () => {
   assert.strictEqual(readFileSync(join(backups, `foundations-03-loops-${stamp}-1`, "total.js"), "utf8"), "// wrecked 1\n");
   assert.strictEqual(readFileSync(join(backups, `foundations-03-loops-${stamp}-2`, "total.js"), "utf8"), "// wrecked 2\n");
   assert.strictEqual(readFileSync(join(cwd, ".codeops", "progress.json"), "utf8"), before);
+});
+
+test("an escape hatch logged after a pass still makes it assisted", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "4");
+  solve(cwd, "foundations", "04-functions");
+  assert.match(run(cwd, "codeops-check", "4").out, /04-functions passed/);
+  const add = run(cwd, "codeops-recall", "add", "--concept", "return", "--how", "escape hatch", "--exercise", "4");
+  assert.match(add.out, /now recorded as assisted/);
+  assert.strictEqual(progress(cwd).tracks.foundations.exercises["04-functions"].status, "assisted");
+  run(cwd, "codeops-check", "4");
+  assert.strictEqual(progress(cwd).tracks.foundations.exercises["04-functions"].status, "assisted");
+});
+
+test("recall lists at most 3 due checks, oldest first", () => {
+  const cwd = learner();
+  mkdirSync(join(cwd, ".codeops"));
+  const entries = ["2000-01-05", "2000-01-01", "2000-01-04", "2000-01-02", "2000-01-03"]
+    .map((due, i) => `- concept: c${i + 1}\n  interval: 1\n  due: ${due}\n`)
+    .join("");
+  writeFileSync(join(cwd, ".codeops", "mistakes.md"), entries);
+  const out = run(cwd, "codeops-recall").out;
+  assert.deepStrictEqual([...out.matchAll(/#\d+\s+(c\d)/g)].map((m) => m[1]), ["c2", "c4", "c5"]);
+  assert.match(out, /\+2 more due/);
+});
+
+test("a pass at the 30-day step retires the entry", () => {
+  const cwd = learner();
+  mkdirSync(join(cwd, ".codeops"));
+  writeFileSync(join(cwd, ".codeops", "mistakes.md"), "- concept: loops\n  interval: 14\n  due: 2000-01-01\n");
+  run(cwd, "codeops-recall", "pass", "1");
+  assert.match(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /interval: 30/);
+  writeFileSync(join(cwd, ".codeops", "mistakes.md"), "- concept: loops\n  interval: 30\n  due: 2000-01-01\n");
+  assert.match(run(cwd, "codeops-recall", "pass", "1").out, /retired/);
+  const log = readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8");
+  assert.match(log, /retired: \d{4}-\d{2}-\d{2}/);
+  assert.doesNotMatch(log, /due:/);
+  assert.match(run(cwd, "codeops-recall").out, /No recall checks due/);
+  assert.strictEqual(run(cwd, "codeops-recall", "pass", "1").status, 1);
 });

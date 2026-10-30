@@ -3,6 +3,7 @@
 > **Implementation notes (v0.1).** This is the plan CodeOps was built from. Where the build differs, the docs won the argument:
 > - Commands are **skills** (`skills/<name>/SKILL.md`), since Claude Code recommends skills over `commands/` for new plugins.
 > - Helper scripts live in **`bin/`**. Skill shell injection can't read files outside the learner's folder, so skills call `codeops-contract`, `codeops-exercise`, `codeops-check`, and `codeops-recall` instead.
+> - Recall intervals are 1 → 3 → 7 → 14 → 30 days. A pass at 30 days retires the entry, and `/codeops:start` shows at most 3 due checks per session.
 > - Progress records `attempts` and `status`. How much help was needed is recorded in `.codeops/mistakes.md` (which `codeops-check` reads to mark *assisted*), not as a `hints_used` count.
 
 You are building **CodeOps**, an open-source Claude Code plugin that teaches people to program by making them think instead of handing them solutions.
