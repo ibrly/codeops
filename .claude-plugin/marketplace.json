@@ -1,0 +1,15 @@
+{
+  "name": "codeops",
+  "owner": {
+    "name": "Ibrahim Aly",
+    "url": "https://github.com/ibrly"
+  },
+  "description": "CodeOps: learn to program with an AI tutor that guides instead of solving.",
+  "plugins": [
+    {
+      "name": "codeops",
+      "source": "./",
+      "description": "Learn to program with an AI tutor that guides you to the answer instead of writing it for you."
+    }
+  ]
+}

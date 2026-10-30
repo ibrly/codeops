@@ -1,0 +1,14 @@
+{
+  "name": "codeops",
+  "displayName": "CodeOps",
+  "version": "0.0.1",
+  "description": "Learn to program with an AI tutor that guides you to the answer instead of writing it for you.",
+  "author": {
+    "name": "Ibrahim Aly",
+    "url": "https://github.com/ibrly"
+  },
+  "homepage": "https://github.com/ibrly/codeops",
+  "repository": "https://github.com/ibrly/codeops",
+  "license": "MIT",
+  "keywords": ["education", "learn-to-code", "tutor", "programming"]
+}
