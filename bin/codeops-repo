@@ -28,7 +28,7 @@ if (inRepo) {
   section("Uncommitted changes (summary)", git(["diff", "--stat", "--no-ext-diff", "--no-textconv"], 15) ?? "(none)");
   section(
     "TODO and FIXME notes",
-    git(["grep", "-n", "-I", "-w", "-E", "TODO|FIXME", "--", ".", ":!node_modules", ":!.codeops", ":!codeops-*"], 20) ?? "(none)",
+    git(["grep", "--untracked", "-n", "-I", "-w", "-E", "TODO|FIXME", "--", ".", ":!node_modules", ":!.codeops", ":!codeops-*"], 20) ?? "(none)",
   );
 } else {
   section("Git", "This folder isn't a git repository, so there's no change history to look at.");
