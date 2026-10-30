@@ -14,6 +14,8 @@ When the learner is stuck, a test fails, or they ask for help, climb one rung at
 4. **Partial.** Show the shape of the fix: pseudocode, or the line with the key part left blank (`for (let i = 0; i ___ items.length; i++)`).
 5. **Full.** Show the full fix and why it works. Only after the escape-hatch cost in section 2 is paid.
 
+Before you build a hint on something the learner reports (an error message, a number, what a line does), check it yourself by reading the file or running the test. Learners misread output, and a hint built on a misreading sends them the wrong way.
+
 If the learner makes an attempt and it's wrong, say what their attempt got right first, then stay on the same rung or go up one.
 
 After any fix, whoever wrote it:
@@ -32,13 +34,15 @@ The learner can always get the direct answer. Never refuse, lecture, or make the
 
    ```markdown
    - concept: off-by-one in loop bounds
+     exercise: 03-loops
      date: 2026-10-31
      how: escape hatch
      guess: "maybe the loop starts at the wrong number"
+     interval: 1
      due: 2026-11-01
    ```
 
-   Use today's date, and set `due` to tomorrow. Use `how: escape hatch` here and `how: partial hint` when they needed rung 4. Logging is honest, not a penalty, so tell them in one line: "I've noted this so we can do a quick recall check later."
+   Use today's date, `interval: 1`, and set `due` to tomorrow. Leave out `exercise` if they weren't on a CodeOps exercise. Use `how: escape hatch` here and `how: partial hint` when they needed rung 4. Logging is honest, not a penalty, so tell them in one line: "I've noted this so we can do a quick recall check later."
 
 The direct answer is never a refusal and never free. The guess and the explain-back are the price, and they're what makes the answer stick.
 

@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+// Lists Foundations exercises, or copies one into the learner's folder and prints its README.
+//   codeops-exercise --list     show every exercise with its status and the next one to do
+//   codeops-exercise <id|n>     set up an exercise (e.g. 03-loops or 3) in ./codeops-foundations/
+const fs = require("node:fs");
+const path = require("node:path");
+
+const track = "foundations";
+const source = path.join(__dirname, "..", "tracks", track, "exercises");
+const workspace = path.join(process.cwd(), `codeops-${track}`);
+const dataDir = path.join(process.cwd(), ".codeops");
+const progressFile = path.join(dataDir, "progress.json");
+
+const ids = fs.readdirSync(source).filter((d) => /^\d\d-/.test(d)).sort();
+
+function readProgress() {
+  try {
+    return JSON.parse(fs.readFileSync(progressFile, "utf8"));
+  } catch {
+    return { exercises: {} };
+  }
+}
+
+function resolveId(arg) {
+  const n = String(arg).padStart(2, "0");
+  return ids.find((id) => id === arg || id.startsWith(n + "-"));
+}
+
+const arg = process.argv[2];
+
+if (!arg || arg === "--list") {
+  const progress = readProgress().exercises;
+  const next = ids.find((id) => !["passed", "assisted"].includes(progress[id]?.status));
+  for (const id of ids) {
+    const p = progress[id];
+    const status = p ? `${p.status}${p.attempts ? `, ${p.attempts} test run(s)` : ""}` : "not started";
+    console.log(`${id === next ? "→" : " "} ${id.padEnd(20)} ${status}`);
+  }
+  console.log(next ? `\nNext exercise: ${next}` : "\nAll exercises are done.");
+  process.exit(0);
+}
+
+const id = resolveId(arg);
+if (!id) {
+  console.error(`No exercise "${arg}". Run codeops-exercise --list to see them.`);
+  process.exit(1);
+}
+
+const target = path.join(workspace, id);
+if (fs.existsSync(target)) {
+  console.log(`Already set up at ${path.relative(process.cwd(), target)}/ (your changes are kept).`);
+} else {
+  fs.cpSync(path.join(source, id), target, { recursive: true });
+  console.log(`Set up ${id} at ${path.relative(process.cwd(), target)}/`);
+}
+
+fs.mkdirSync(dataDir, { recursive: true });
+if (!fs.existsSync(path.join(dataDir, ".gitignore"))) fs.writeFileSync(path.join(dataDir, ".gitignore"), "*\n");
+const progress = readProgress();
+progress.exercises[id] ??= { status: "in_progress", attempts: 0 };
+fs.writeFileSync(progressFile, JSON.stringify(progress, null, 2) + "\n");
+
+console.log(`Files: ${fs.readdirSync(target).join(", ")}\n`);
+console.log(fs.readFileSync(path.join(target, "README.md"), "utf8"));

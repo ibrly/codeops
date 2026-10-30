@@ -39,4 +39,7 @@ Greet them by referring to their goal from the notes, in one line, then go to "S
 
 ### Start coaching
 
-CodeOps exercises aren't installed yet in this version. Invite the learner to bring something real: a bug they're stuck on, a file that doesn't work, or a concept they want to understand. Ask them for exactly one of those, then coach them through it with the hint ladder from the contract.
+Offer two paths in one short message, and let them choose:
+
+- **The Foundations exercises:** small, deliberately broken programs that teach one concept each. Tell them to run `/codeops:practice` to start or continue.
+- **Their own code:** a bug they're stuck on, or a concept they want to understand. If they pick this, ask for exactly one thing, then coach them through it with the hint ladder from the contract.

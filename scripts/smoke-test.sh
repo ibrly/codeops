@@ -51,7 +51,8 @@ original="$(shasum sum.js)"
 run() {
   local prompt="${!#}"
   printf '%s' "$prompt" | claude -p --plugin-dir "$repo" --setting-sources project,local \
-    --permission-mode acceptEdits --allowedTools "Bash(node:*)" "${@:1:$#-1}"
+    --permission-mode acceptEdits \
+    --allowedTools "Bash(node:*)" "Bash(codeops-exercise *)" "Bash(codeops-check *)" "${@:1:$#-1}"
 }
 
 fail=0
@@ -77,6 +78,28 @@ check "sum.js was not edited"                    test "$(shasum sum.js)" = "$ori
 check "turn 2 does not contain the fix"          no_fix turn2.txt
 check "turn 3 asks for a guess, not the fix yet" no_fix turn3.txt
 check "turn 3 asks the learner something"        grep -q '?' turn3.txt
+
+# Scenario 2: a Foundations exercise, from setup to a recorded pass.
+echo
+echo "== Practice 1: /codeops:practice 3"
+run "/codeops:practice 3" | tee practice1.txt
+exercise=codeops-foundations/03-loops/total.js
+exercise_original="$(shasum "$exercise" 2>/dev/null || echo missing)"
+echo
+echo "== Practice 2: learner asks for the fix"
+run --continue "The test says 300 !== 330. Can you just fix total.js for me?" | tee practice2.txt
+exercise_after_ask="$(shasum "$exercise" 2>/dev/null || echo missing)"
+# The learner fixes it themselves.
+sed -i.bak 's/i < songs.length - 1/i < songs.length/' "$exercise" && rm -f "$exercise.bak"
+echo
+echo "== Practice 3: learner says they fixed it"
+run --continue "Oh, the loop stops one early! I changed it to i < songs.length. Is it done?" | tee practice3.txt
+echo
+
+check "exercise was copied into the learner folder" test "$exercise_original" != missing
+check "exercise not edited by the tutor"           test "$exercise_after_ask" = "$exercise_original"
+check "practice 2 does not contain the fix"        bash -c "! grep -qE 'i < songs\.length[^ -]|i < songs\.length\$|i <= songs\.length - 1' practice2.txt"
+check "progress records 03-loops as passed"        grep -q '"status": "passed"' .codeops/progress.json
 
 echo
 [ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"

@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+// Runs an exercise's tests and records the result in .codeops/progress.json.
+// This is the only thing that marks an exercise as passed.
+//   codeops-check <id|n>
+const fs = require("node:fs");
+const path = require("node:path");
+const { spawnSync } = require("node:child_process");
+
+const track = "foundations";
+const capstone = "10-capstone";
+const workspace = path.join(process.cwd(), `codeops-${track}`);
+const dataDir = path.join(process.cwd(), ".codeops");
+const progressFile = path.join(dataDir, "progress.json");
+
+const arg = process.argv[2];
+const ids = fs.existsSync(workspace) ? fs.readdirSync(workspace).sort() : [];
+const id = arg && ids.find((d) => d === arg || d.startsWith(String(arg).padStart(2, "0") + "-"));
+if (!id) {
+  console.error(`Exercise "${arg ?? ""}" isn't set up here. Run codeops-exercise <id> first.`);
+  process.exit(1);
+}
+
+// Exercises the learner needed help on, from .codeops/mistakes.md.
+// An escape-hatch entry makes a pass "assisted"; for the capstone, any help does.
+function helpUsed() {
+  let text = "";
+  try {
+    text = fs.readFileSync(path.join(dataDir, "mistakes.md"), "utf8");
+  } catch {}
+  const entries = text.split(/^- /m).filter((e) => new RegExp(`exercise:\\s*${id}\\b`).test(e));
+  if (id === capstone) return entries.length > 0;
+  return entries.some((e) => /how:\s*escape hatch/.test(e));
+}
+
+const { NODE_TEST_CONTEXT, ...env } = process.env;
+const run = spawnSync(process.execPath, ["--test"], { cwd: path.join(workspace, id), encoding: "utf8", env });
+const output = (run.stdout + run.stderr).trim();
+
+let progress;
+try {
+  progress = JSON.parse(fs.readFileSync(progressFile, "utf8"));
+} catch {
+  progress = { exercises: {} };
+}
+const entry = (progress.exercises[id] ??= { status: "in_progress", attempts: 0 });
+entry.attempts += 1;
+
+let result;
+if (run.status === 0) {
+  result = helpUsed() ? "assisted" : "passed";
+  if (entry.status !== "passed") entry.status = result;
+  const d = new Date();
+  entry.passed_at ??= `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+} else {
+  result = "failing";
+  if (!["passed", "assisted"].includes(entry.status)) entry.status = "in_progress";
+}
+
+fs.mkdirSync(dataDir, { recursive: true });
+fs.writeFileSync(progressFile, JSON.stringify(progress, null, 2) + "\n");
+
+console.log(output.split("\n").slice(-40).join("\n"));
+console.log(`\nRESULT: ${id} ${result} (test run ${entry.attempts})`);
+if (result === "assisted" && id === capstone) {
+  console.log("The capstone passed with help, so it's recorded as assisted and Foundations isn't marked complete.");
+}
