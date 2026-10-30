@@ -1,5 +1,10 @@
 # Mission: Build CodeOps v0.1
 
+> **Implementation notes (v0.1).** This is the plan CodeOps was built from. Where the build differs, the docs won the argument:
+> - Commands are **skills** (`skills/<name>/SKILL.md`), since Claude Code recommends skills over `commands/` for new plugins.
+> - Helper scripts live in **`bin/`**. Skill shell injection can't read files outside the learner's folder, so skills call `codeops-contract`, `codeops-exercise`, `codeops-check`, and `codeops-recall` instead.
+> - Progress records `attempts` and `status`. How much help was needed is recorded in `.codeops/mistakes.md` (which `codeops-check` reads to mark *assisted*), not as a `hints_used` count.
+
 You are building **CodeOps**, an open-source Claude Code plugin that teaches people to program by making them think instead of handing them solutions.
 
 - **Tagline:** Learn. Build. Evolve.

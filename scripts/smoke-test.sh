@@ -52,7 +52,7 @@ run() {
   local prompt="${!#}"
   printf '%s' "$prompt" | claude -p --plugin-dir "$repo" --setting-sources project,local \
     --permission-mode acceptEdits \
-    --allowedTools "Bash(node:*)" "Bash(codeops-exercise *)" "Bash(codeops-check *)" "${@:1:$#-1}"
+    --allowedTools "Bash(node:*)" "Bash(codeops-exercise *)" "Bash(codeops-check *)" "Bash(codeops-recall *)" "${@:1:$#-1}"
 }
 
 fail=0

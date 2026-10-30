@@ -13,7 +13,7 @@ Read the files you're given. If you're told which exercise they're on, read its 
 2. Clarity: confusing names, code that's hard to follow
 3. Habits: things that will cause trouble later (mutating inputs unexpectedly, repeated code)
 
-Skip style nitpicks unless there's nothing more important.
+Skip style nitpicks unless there's nothing more important. Fewer, sharper findings beat a full list: one real bug is a complete review. For an exercise, lead with whatever makes its tests fail, and include at most one finding the tests don't check.
 
 For each finding, give:
 
