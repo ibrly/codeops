@@ -52,4 +52,4 @@ Recall checks:
 Offer two paths in one short message, and let them choose:
 
 - **The exercises:** small, deliberately broken programs that teach one concept each. Tell them to run `/codeops:practice` to start or continue.
-- **Their own code:** a bug they're stuck on, or a concept they want to understand. If they pick this, ask for exactly one thing, then coach them through it with the hint ladder from the contract.
+- **Their own code:** a bug or TODO in a project of theirs. Tell them to open Claude Code in that project's folder and run `/codeops:coach`. If they'd rather just ask about a concept or paste some code here, ask for exactly one thing, then coach them through it with the hint ladder from the contract.

@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+// A read-only snapshot of the learner's own project for /codeops:coach.
+// It never runs project code: git is called with external diff, textconv, and fsmonitor off,
+// and the test command is only printed, so the learner runs it themselves.
+const fs = require("node:fs");
+const path = require("node:path");
+const { spawnSync } = require("node:child_process");
+
+const cwd = process.cwd();
+const safeGit = ["-c", "core.fsmonitor=false", "-c", "diff.external=", "--no-pager"];
+
+function git(args, maxLines) {
+  const r = spawnSync("git", [...safeGit, ...args], { cwd, encoding: "utf8", env: { ...process.env, GIT_OPTIONAL_LOCKS: "0" } });
+  if (r.error || r.status > 1) return null;
+  const lines = r.stdout.trimEnd().split("\n").filter(Boolean);
+  const more = lines.length > maxLines ? `\n... (${lines.length - maxLines} more)` : "";
+  return lines.length ? lines.slice(0, maxLines).join("\n") + more : "(none)";
+}
+
+function section(title, body) {
+  console.log(`## ${title}\n\n${body}\n`);
+}
+
+const inRepo = spawnSync("git", [...safeGit, "rev-parse", "--is-inside-work-tree"], { cwd, encoding: "utf8" }).stdout?.trim() === "true";
+
+if (inRepo) {
+  section("Changed files (git status)", git(["status", "--short"], 30) ?? "(couldn't read git status)");
+  section("Uncommitted changes (summary)", git(["diff", "--stat", "--no-ext-diff", "--no-textconv"], 15) ?? "(none)");
+  section(
+    "TODO and FIXME notes",
+    git(["grep", "-n", "-I", "-w", "-E", "TODO|FIXME", "--", ".", ":!node_modules", ":!.codeops", ":!codeops-*"], 20) ?? "(none)",
+  );
+} else {
+  section("Git", "This folder isn't a git repository, so there's no change history to look at.");
+}
+
+function testCommand() {
+  const pkg = path.join(cwd, "package.json");
+  if (fs.existsSync(pkg)) {
+    try {
+      const script = JSON.parse(fs.readFileSync(pkg, "utf8")).scripts?.test;
+      if (script && !/no test specified/.test(script)) return `npm test   (runs: ${script})`;
+    } catch {}
+  }
+  const hasPyTests =
+    fs.existsSync(path.join(cwd, "tests")) || fs.readdirSync(cwd).some((f) => /^test_.*\.py$/.test(f));
+  const pyproject = path.join(cwd, "pyproject.toml");
+  if (fs.existsSync(path.join(cwd, "pytest.ini")) || (fs.existsSync(pyproject) && fs.readFileSync(pyproject, "utf8").includes("[tool.pytest"))) {
+    return "python3 -m pytest";
+  }
+  if (hasPyTests) return "python3 -m unittest";
+  return "unknown: ask the learner how they run their tests";
+}
+
+section("How this project's tests are probably run (not run by CodeOps)", testCommand());

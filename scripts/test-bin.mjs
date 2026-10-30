@@ -106,3 +106,23 @@ test("the Python track runs its own tests and keeps progress separate", () => {
   assert.strictEqual(p.tracks["foundations-python"].exercises["03-loops"].status, "passed");
   assert.strictEqual(p.tracks.foundations?.exercises["03-loops"], undefined);
 });
+
+test("codeops-repo reports the test command without running it", () => {
+  const cwd = learner();
+  spawnSync("git", ["init", "-q"], { cwd });
+  writeFileSync(join(cwd, "sum.js"), "// TODO handle empty lists\nmodule.exports = (a) => a;\n");
+  writeFileSync(join(cwd, "package.json"), JSON.stringify({ scripts: { test: "touch RAN && node --test" } }));
+  const r = run(cwd, "codeops-repo");
+  assert.strictEqual(r.status, 0);
+  assert.match(r.out, /sum\.js:1:.*TODO handle empty lists/);
+  assert.match(r.out, /npm test\s+\(runs: touch RAN && node --test\)/);
+  assert.ok(!existsSync(join(cwd, "RAN")), "the project's test script must never run");
+});
+
+test("codeops-repo works outside a git repository", () => {
+  const cwd = learner();
+  const r = run(cwd, "codeops-repo");
+  assert.strictEqual(r.status, 0);
+  assert.match(r.out, /isn't a git repository/);
+  assert.match(r.out, /unknown: ask the learner/);
+});
