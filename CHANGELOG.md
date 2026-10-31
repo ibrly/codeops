@@ -2,6 +2,20 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Added
+
+- **Module 2: Working with Data**, in JavaScript (`data`) and Python (`data-python`): returning early from a loop, copies vs references, counting with an object or dictionary, filter vs map, where to catch an error, and a capstone that merges two playlists. Foundations points to it as the next track.
+- `track.json` can name a `next` track. The exercise list ends with "Track complete. Next: …", "Capstone assisted: redo …", or the next exercise.
+- `verify-exercises` lints track structure: allowed `track.json` keys, a valid capstone and next track, gap-free numbering, a README with the test command and a test file in every exercise, `NOTES.md` in every solution, and no orphan solution folders.
+- `/codeops:coach` and `/codeops:explain` open with a due recall check, so help logged there comes back.
+
+### Fixed
+
+- **An exercise passed with help can now be redone.** `--reset` starts a new attempt, and an unaided pass on a later day earns *passed* (marked `redone`). Before, an assisted capstone made the track impossible to complete.
+- The capstone READMEs said the tutor could give small hints; they now say that any hint records the capstone as *assisted*, matching what's checked.
+
 ## 0.3.0
 
 ### Added

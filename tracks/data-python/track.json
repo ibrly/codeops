@@ -1,0 +1,6 @@
+{
+  "title": "Working with Data (Python)",
+  "language": "Python",
+  "test": ["python3", "-m", "unittest"],
+  "capstone": "06-capstone"
+}

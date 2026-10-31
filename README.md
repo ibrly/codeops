@@ -4,7 +4,7 @@
 
 CodeOps is an open-source [Claude Code](https://code.claude.com/docs) plugin that teaches programming by making you think instead of handing you solutions. You fix small, deliberately broken programs, and an AI tutor coaches you to the answer one hint at a time.
 
-> **Status: early.** Programming Foundations works end to end in two languages, JavaScript and Python, with 10 exercises each. Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
+> **Status: early.** Two modules work end to end in JavaScript and Python: Programming Foundations (10 exercises) and Working with Data (6 exercises). Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
 
 ## Why CodeOps exists
 
@@ -110,6 +110,17 @@ Ten exercises about a small music-playlist program, in **JavaScript** or **Pytho
 8. Reading error messages
 9. Writing your own test (your test has to catch a real bug)
 10. **Capstone:** write a function from scratch, with hints capped at "nudge" and no escape hatch. Passing it unassisted is what completing Foundations means.
+
+## Working with Data
+
+The second module, for learners who've finished Foundations. The tutor points you to it when your Foundations capstone passes. It has six exercises on the same playlist program:
+
+1. Returning early from a loop
+2. Copies and references
+3. Counting with an object (JavaScript) or dictionary (Python)
+4. Filter vs map (JavaScript) or choosing vs transforming in a comprehension (Python)
+5. Where to catch an error
+6. **Capstone:** merge two playlists without duplicates, from scratch
 
 ## Your data stays local
 

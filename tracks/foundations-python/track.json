@@ -1,6 +1,11 @@
 {
   "title": "Programming Foundations (Python)",
   "language": "Python",
-  "test": ["python3", "-m", "unittest"],
-  "capstone": "10-capstone"
+  "test": [
+    "python3",
+    "-m",
+    "unittest"
+  ],
+  "capstone": "10-capstone",
+  "next": "data-python"
 }
