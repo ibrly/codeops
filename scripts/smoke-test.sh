@@ -242,7 +242,7 @@ askdir="$work/asking"
 mkdir -p "$askdir"
 skill_used() { # skill_used <prompt> -> prints the skills Claude invoked
   (cd "$askdir" && printf '%s' "$1" | claude -p --plugin-dir "$repo" --setting-sources project,local \
-    --output-format stream-json --verbose --max-turns 2 2>/dev/null) | grep -o '"skill":"[^"]*"' | sort -u
+    --output-format stream-json --verbose --max-turns 2 2>/dev/null) | { grep -o '"skill":"[^"]*"' || true; } | sort -u
 }
 echo
 echo "== Asking: learning intent"
