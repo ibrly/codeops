@@ -2,7 +2,7 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
-## Unreleased
+## 0.4.0
 
 ### Added
 
@@ -10,6 +10,8 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 - `track.json` can name a `next` track. The exercise list ends with "Track complete. Next: …", "Capstone assisted: redo …", or the next exercise.
 - `verify-exercises` lints track structure: allowed `track.json` keys, a valid capstone and next track, gap-free numbering, a README with the test command and a test file in every exercise, `NOTES.md` in every solution, and no orphan solution folders.
 - `/codeops:coach` and `/codeops:explain` open with a due recall check, so help logged there comes back.
+- **Tutoring in the learner's language.** Onboarding asks which language to talk in. The tutor replies in it, keeps code, commands, errors, and `RESULT:` lines unchanged, and translates quoted errors. Exercises stay in English.
+- **Pace.** Experienced learners are offered a jump to exercise 07 or the capstone. A returning learner stuck after 6+ test runs is offered a fresh copy or a short recap.
 
 ### Fixed
 
