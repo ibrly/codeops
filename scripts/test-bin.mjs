@@ -349,3 +349,18 @@ test("switching to the Python track checks Python is installed first", () => {
   assert.match(r.stderr, /needs Python 3\.10 or later/);
   assert.ok(!existsSync(join(cwd, ".codeops", "progress.json")) || progress(cwd).track !== "foundations-python");
 });
+
+test("codeops-repo --staged shows staged changes without running anything", () => {
+  const cwd = learner();
+  const git = (...args) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd, encoding: "utf8" });
+  git("init", "-q");
+  writeFileSync(join(cwd, "package.json"), JSON.stringify({ scripts: { test: "touch RAN" } }));
+  assert.match(run(cwd, "codeops-repo", "--staged").out, /nothing staged yet/);
+  writeFileSync(join(cwd, "sum.js"), "module.exports = (a) => a.reduce((t, n) => t + n, 0);\n");
+  git("add", "sum.js");
+  const out = run(cwd, "codeops-repo", "--staged").out;
+  assert.match(out, /sum\.js \| 1 \+/);
+  assert.match(out, /\+module\.exports = \(a\) => a\.reduce/);
+  assert.ok(!existsSync(join(cwd, "RAN")));
+  assert.match(git("status", "--short").stdout, /^A  sum\.js/m, "the index must be unchanged");
+});

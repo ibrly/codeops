@@ -2,6 +2,26 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Added
+
+- **`/codeops:explain`**: before committing, the learner explains their staged changes hunk by hunk, and gaps become recall checks. It reads the staged diff only and never stages, commits, or runs anything. This replaces the idea of a git pre-commit hook, which would have needed installing code into the learner's repo.
+- `codeops-exercise --track` checks the track's language is installed (Python 3.10+) and gives install guidance instead of failing later.
+
+### Changed
+
+- **Minimum Node.js is now 20.** Node 18 is end-of-life. CI runs on Linux, macOS, and Windows with Node 20 and 22.
+- Check output points at the learner's own files instead of the temp copy the tests ran in, on every platform.
+- On Windows, Python is found as `python3`, `python`, or `py -3`.
+
+### Fixed
+
+- A test run that never finishes (an infinite loop) is stopped after 10 seconds and reported as `failing (timed out)`, instead of hanging.
+- Helpers find the learner's root folder when run from inside an exercise folder, so help can't be logged to a stray `.codeops/`.
+- A recall check can only be passed once it's due.
+- An unknown track in `progress.json` gives a clear error instead of a crash.
+
 ## 0.2.0
 
 ### Added

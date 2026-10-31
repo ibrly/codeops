@@ -22,6 +22,19 @@ function section(title, body) {
   console.log(`## ${title}\n\n${body}\n`);
 }
 
+// --staged: what's about to be committed, for /codeops:explain.
+if (process.argv[2] === "--staged") {
+  const ok = spawnSync("git", [...safeGit, "rev-parse", "--is-inside-work-tree"], { cwd, encoding: "utf8" }).stdout?.trim() === "true";
+  if (!ok) {
+    section("Git", "This folder isn't a git repository, so there's nothing staged to explain.");
+    process.exit(0);
+  }
+  const stat = git(["diff", "--cached", "--stat", "--no-ext-diff", "--no-textconv"], 30);
+  section("Staged files", stat === "(none)" ? "(nothing staged yet: stage changes with git add first)" : stat);
+  if (stat !== "(none)") section("Staged changes", git(["diff", "--cached", "--no-ext-diff", "--no-textconv", "--unified=2"], 200));
+  process.exit(0);
+}
+
 const inRepo = spawnSync("git", [...safeGit, "rev-parse", "--is-inside-work-tree"], { cwd, encoding: "utf8" }).stdout?.trim() === "true";
 
 if (inRepo) {
