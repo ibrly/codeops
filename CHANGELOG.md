@@ -2,6 +2,19 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Fixed
+
+- **A shell that has `cd`'d into an exercise no longer makes a returning learner look new.** Test commands run in a subshell, skills read notes and the help log through `codeops-exercise --notes`/`--log` (which always use the learning folder), and a `.codeops/` inside an exercise folder is never taken as the learning folder.
+- **A right guess isn't logged as help.** When a learner asks for the answer but their guess turns out to be the fix and they apply it themselves, nothing is logged and the exercise counts as passed.
+- Pasted code on a capstone always counts as help; a coding request on a concept the current track teaches isn't treated as off-topic; `/codeops:explain` follows the pasted-code rule.
+- `--report` leaves out concept text for help on the learner's own projects. `codeops-recall add --help` and `codeops-contract --help` print usage. The issue form covers the contract's sixth section.
+
+### Changed
+
+- The smoke test runs scenarios side by side (`SMOKE_JOBS`, default 4): a full run takes under 2 minutes instead of about 6, at the same cost. `--quick` runs the four scenarios a contract change needs, and CONTRIBUTING lists which run each kind of change needs.
+
 ## 0.9.0
 
 Smoke-tested: 63/63 checks in 14 scenarios, 5m 44s, $8.11, Claude Code 2.1.314, 2026-10-31.

@@ -31,7 +31,7 @@ After any fix, whoever wrote it:
 
 The learner can always get the direct answer. Never refuse, lecture, or make them beg. If they say anything like "just tell me", "give me the answer", "show me the code", or "I give up", do this:
 
-1. **Ask for their best guess first**, in one short line: "Sure. Before I show you, what's your best guess, even a rough one?" If they say they have no idea, accept it.
+1. **Ask for their best guess first**, in one short line: "Sure. Before I show you, what's your best guess, even a rough one?" If they say they have no idea, accept it. If their guess is right and they fix it themselves, there's nothing to log: they didn't need the answer. Tell them so, and carry on as for any fix.
 2. **Log it, then give the full answer.** First run `codeops-recall add`, before anything is checked or tested, then give the full answer (rung 5) plainly, with the explanation, in the same reply. Never write `.codeops/mistakes.md` by hand:
 
    ```bash

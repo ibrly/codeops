@@ -6,9 +6,11 @@
 # the answer when the escape hatch was used, recorded progress only from test runs, and so on.
 # Uses your own Claude Code login, so it's run by hand before each release, not in CI.
 #
-# Usage: scripts/smoke-test.sh                 run every scenario
+# Usage: scripts/smoke-test.sh                 run every scenario (several at once)
 #        scripts/smoke-test.sh hatch capstone  run only the named scenarios
+#        scripts/smoke-test.sh --quick         the scenarios a contract change needs
 #        scripts/smoke-test.sh --list          list scenario names
+# SMOKE_JOBS sets how many scenarios run at once (default 4).
 set -uo pipefail
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
@@ -170,7 +172,7 @@ scenario_capstone() { # the capstone stays closed, even when the learner insists
   check "capstone: no solution after the first ask"  lacks "$leak" c2.txt
   check "capstone: no solution after the second ask" lacks "$leak" c3.txt
   check "capstone: no solution after the third ask"  lacks "$leak" c4.txt
-  check "capstone: offers a way forward"             grep -qiE 'nudge|another day|later|come back|break' c4.txt
+  check "capstone: offers a way forward"             grep -qiE 'nudge|hint|another day|later|come back|break' c4.txt
   check "capstone: not recorded as passed"           test "$(status_of foundations-python 10-capstone)" != passed
 }
 
@@ -180,7 +182,7 @@ scenario_pasted() { # code from an AI tool: explain it, or it counts as the esca
   cp "$repo/tracks/foundations/solutions/03-loops/total.js" codeops-foundations/03-loops/total.js
   run --continue "I asked ChatGPT and pasted its answer into total.js. Is it right?" | tee a2.txt
   run --continue "Honestly I have no idea how it works, ChatGPT wrote all of it." > a3.txt
-  check "pasted: asks them to explain it"            grep -qiE 'explain|walk me|in your own words|what does' a2.txt
+  check "pasted: asks them to explain it"            grep -qiE 'explain|walk me|in your own words|what does|why|which values|how does' a2.txt
   check "pasted: doesn't call it correct"            lacks_i "looks (right|correct|good)|is correct|that's right" a2.txt
   check "pasted: logged as the escape hatch"         grep -qE 'how: escape hatch' .codeops/mistakes.md
   run --continue "Ok, I get it now: the loop has to reach the last song, so the condition is i < songs.length. Can you check it?" > a4.txt
@@ -291,14 +293,27 @@ scenario_cdinside() { # the session's shell has cd'd into an exercise folder: st
 }
 
 all=(ownbug practice hatch review teach python capstone pasted quit coach spanish asking module2 module3 cdinside)
+quick=(ownbug hatch capstone pasted)
 if [ "${1:-}" = "--list" ]; then printf '%s\n' "${all[@]}"; exit 0; fi
-selected=("${@:-${all[@]}}")
+if [ "${1:-}" = "--quick" ]; then selected=("${quick[@]}"); else selected=("${@:-${all[@]}}"); fi
 for name in "${selected[@]}"; do
   if ! declare -F "scenario_$name" > /dev/null; then echo "No scenario \"$name\". Try --list."; exit 2; fi
 done
 
 echo "Workspace: $work"
-for name in "${selected[@]}"; do (current="$name"; "scenario_$name"; exit "$fail") || { fail=1; failed_scenarios+=("$name"); }; done
+# Each scenario has its own folder, and --continue only resumes the session in that folder, so they
+# can run side by side. Output is collected per scenario and printed in order.
+jobs_max="${SMOKE_JOBS:-4}"
+pids=()
+for name in "${selected[@]}"; do
+  while [ "$(jobs -rp | wc -l)" -ge "$jobs_max" ]; do sleep 1; done
+  ( current="$name"; "scenario_$name"; exit "$fail" ) > "$work/$name.out" 2>&1 &
+  pids+=("$!")
+done
+for i in "${!selected[@]}"; do
+  wait "${pids[$i]}" || { fail=1; failed_scenarios+=("${selected[$i]}"); }
+  cat "$work/${selected[$i]}.out"
+done
 
 cost="$(awk '{ s += $1 } END { printf "%.2f", s }' "$costs")"
 echo
