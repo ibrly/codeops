@@ -4,7 +4,7 @@
 
 CodeOps is an open-source [Claude Code](https://code.claude.com/docs) plugin that teaches programming by making you think instead of handing you solutions. You fix small, deliberately broken programs, and an AI tutor coaches you to the answer one hint at a time.
 
-> **Status: early.** Two modules work end to end in JavaScript and Python: Programming Foundations (10 exercises) and Working with Data (6 exercises). Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
+> **Status: early.** Three modules work end to end in JavaScript and Python: Programming Foundations (10 exercises), Working with Data (6), and Building a Program (6). Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
 
 ## Why CodeOps exists
 
@@ -133,6 +133,17 @@ The second module, for learners who've finished Foundations. The tutor points yo
 4. Filter vs map (JavaScript) or choosing vs transforming in a comprehension (Python)
 5. Where to catch an error
 6. **Capstone:** merge two playlists without duplicates, from scratch
+
+## Building a Program
+
+The third module, where the playlist code becomes a real program you run from the terminal:
+
+1. Splitting code into files (modules)
+2. Command-line arguments
+3. Reading a file
+4. Saving data as JSON
+5. Waiting for slow work with `async`/`await` (JavaScript) or a file that's both a program and a module (Python)
+6. **Capstone:** a complete `stats` command that reads a playlist file and prints a summary, with a clean error for a missing file
 
 ## Your data stays local
 

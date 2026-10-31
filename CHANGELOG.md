@@ -2,6 +2,22 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Added
+
+- **Module 3: Building a Program**, in JavaScript (`program`) and Python (`program-python`): modules, command-line arguments, reading a file, saving JSON, `async`/`await` (JavaScript) or the `__main__` guard (Python), and a capstone that's a complete command-line program. Working with Data points to it as the next track.
+- A **"The tutor felt wrong" issue form** whose fields map to the teaching contract, and a README troubleshooting table.
+- `verify-exercises` checks that a module's JavaScript and Python versions line up.
+
+### Fixed
+
+- **A pass now requires the shipped tests to actually run and pass.** Exiting early (`process.exit(0)`, `os._exit(0)`) or a learner `unittest.py` shadowing Python's test runner could record *passed*. The check now needs the runner's own summary with at least the shipped number of tests passing.
+- **No lost updates.** A check that runs while help is logged no longer overwrites the *assisted* mark; progress is re-read right before each write, and writes are atomic.
+- Track names are validated, so a crafted name can't make helpers write outside the learner's folder.
+- Interrupting a check stops its test processes; endless test output is capped instead of crashing the check.
+- A `.codeops/` in the home folder no longer captures learning folders below it. Setting up an exercise prints its full path.
+
 ## 0.4.0
 
 ### Added

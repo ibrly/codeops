@@ -581,10 +581,17 @@ test("verify-exercises catches language versions of a module drifting apart", ()
     const { NODE_TEST_CONTEXT, ...env } = process.env;
     return spawnSync(process.execPath, [join(root, "scripts", "verify-exercises.mjs")], { encoding: "utf8", env: { ...env, CODEOPS_TRACKS_DIR: dir } });
   };
+  // Only this pair is copied, so drop their "next" (it names tracks the fixture doesn't have).
+  const manifest = (name) => join(dir, name, "track.json");
+  const edit = (name, change) => {
+    const m = JSON.parse(readFileSync(manifest(name), "utf8"));
+    change(m);
+    writeFileSync(manifest(name), JSON.stringify(m));
+  };
+  edit("data", (m) => delete m.next);
+  edit("data-python", (m) => delete m.next);
   assert.strictEqual(verify().status, 0, "the real pair lines up");
-  const m = JSON.parse(readFileSync(join(dir, "data", "track.json"), "utf8"));
-  m.next = "data-python";
-  writeFileSync(join(dir, "data", "track.json"), JSON.stringify(m));
+  edit("data", (m) => (m.next = "data-python"));
   const r = verify();
   assert.strictEqual(r.status, 1);
   assert.match(r.stderr, /only one language version names a next track/);
