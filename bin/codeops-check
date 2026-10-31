@@ -53,20 +53,23 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => p
     process.exit(2);
   }
 
-  const entry = (t.trackExercises(progress, track.name)[id] ??= { status: "in_progress", attempts: 0 });
-  entry.attempts += 1;
-
+  // Re-read progress now: the test run took a while, and other helpers may have written meanwhile.
   let result;
-  if (t.runPassed(track, run, check.expected)) {
-    result = helpUsed(entry.resets || 0) ? "assisted" : "passed";
-    if (entry.status === "assisted" && result === "passed") entry.redone = true;
-    if (entry.status !== "passed") entry.status = result;
-    entry.passed_at ??= t.localDate();
-  } else {
-    result = run.timedOut ? "failing (timed out)" : "failing";
-    if (!["passed", "assisted"].includes(entry.status)) entry.status = "in_progress";
-  }
-  t.writeProgress(cwd, progress);
+  const entry = t.updateProgress(cwd, (fresh) => {
+    const entry = (t.trackExercises(fresh, track.name)[id] ??= { status: "in_progress", attempts: 0 });
+    entry.attempts += 1;
+    if (t.runPassed(track, run, check.expected)) {
+      result = helpUsed(entry.resets || 0) ? "assisted" : "passed";
+      if (entry.status === "assisted" && result === "passed") entry.redone = true;
+      // Help on the current attempt always counts, even if this exercise passed unaided before.
+      if (result === "assisted" || entry.status !== "passed") entry.status = result;
+      entry.passed_at ??= t.localDate();
+    } else {
+      result = run.timedOut ? "failing (timed out)" : "failing";
+      if (!["passed", "assisted"].includes(entry.status)) entry.status = "in_progress";
+    }
+    return entry;
+  });
 
   // Tests ran in a temp copy; point file paths in the output at the learner's own files instead.
   const shown = path.relative(cwd, dir) + path.sep;

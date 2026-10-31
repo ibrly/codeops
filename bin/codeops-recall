@@ -54,8 +54,9 @@ if (action === "add") {
     const entry = t.trackExercises(progress, track.name)[id];
     if (entry?.status === "passed" && (opts.how === "escape hatch" || id === track.capstone)) {
       downgrade = () => {
-        entry.status = "assisted";
-        t.writeProgress(root, progress);
+        t.updateProgress(root, (fresh) => {
+          t.trackExercises(fresh, track.name)[id].status = "assisted";
+        });
         console.log(`${exercise} is now recorded as assisted.`);
       };
     }
@@ -68,8 +69,9 @@ if (action === "add") {
   if (opts.guess) lines.push(`  guess: ${JSON.stringify(clean(opts.guess))}`);
   lines.push("  interval: 1", `  due: ${localDate(1)}`);
   t.ensureDataDir(root);
-  const sep = text && !text.endsWith("\n") ? "\n" : "";
-  fs.writeFileSync(file, text + sep + lines.join("\n") + "\n");
+  // Append to what's on disk now, not to the copy read at startup.
+  const current = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
+  fs.appendFileSync(file, (current && !current.endsWith("\n") ? "\n" : "") + lines.join("\n") + "\n");
   console.log(`Logged "${clean(opts.concept)}"${exercise ? ` for ${exercise}` : ""}. First recall check on ${localDate(1)}.`);
   downgrade?.();
   process.exit(0);
@@ -120,12 +122,12 @@ const setField = (e, name, value) =>
 if (action === "pass" && current >= steps.at(-1)) {
   entry = setField(entry.replace(/^\s*due:.*\n?/m, ""), "retired", today);
   parts[n - 1] = entry;
-  fs.writeFileSync(file, head + parts.join(""));
+  t.writeFileAtomic(file, head + parts.join(""));
   console.log(`#${n} ${field(entry, "concept")}: recalled after ${current} days. That one's learned, so it's retired.`);
   process.exit(0);
 }
 entry = setField(entry, "interval", next);
 entry = setField(entry, "due", localDate(next));
 parts[n - 1] = entry;
-fs.writeFileSync(file, head + parts.join(""));
+t.writeFileAtomic(file, head + parts.join(""));
 console.log(`#${n} ${field(entry, "concept")}: ${action === "pass" ? "recalled" : "missed"}. Next check in ${next} day(s), on ${localDate(next)}.`);

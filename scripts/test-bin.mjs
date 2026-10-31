@@ -516,3 +516,21 @@ test("a test that prints endlessly is stopped, not a crash", () => {
   const r = spawnSync(process.execPath, [bin("codeops-check"), "3"], { cwd, encoding: "utf8", env: { ...env, CODEOPS_TEST_TIMEOUT_MS: "2000" } });
   assert.match(r.stdout, /RESULT: foundations-python\/03-loops failing \(timed out\)/);
 });
+
+test("a help entry logged while a check is running isn't lost", async () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  solve(cwd, "foundations", "03-loops");
+  // A learner-written extra test that takes a moment, so the check is still running when help is logged.
+  writeFileSync(join(cwd, "codeops-foundations", "03-loops", "slow.test.js"), 'require("node:test")("slow", async () => new Promise((r) => setTimeout(r, 1500)));\n');
+  const { NODE_TEST_CONTEXT, ...env } = process.env;
+  const { spawn } = await import("node:child_process");
+  const check = spawn(process.execPath, [bin("codeops-check"), "3"], { cwd, env });
+  let out = "";
+  check.stdout.on("data", (d) => (out += d));
+  await new Promise((r) => setTimeout(r, 400));
+  run(cwd, "codeops-recall", "add", "--concept", "loops", "--how", "escape hatch", "--exercise", "3");
+  await new Promise((r) => check.on("close", r));
+  assert.match(out, /03-loops assisted/);
+  assert.strictEqual(progress(cwd).tracks.foundations.exercises["03-loops"].status, "assisted");
+});
