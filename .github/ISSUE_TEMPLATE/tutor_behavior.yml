@@ -24,6 +24,7 @@ body:
         - "3. Choosing a method (the approach didn't fit what I needed)"
         - "4. Tone (lectured, condescending, too long, too many questions)"
         - "5. Something it should never do (edited my code, ran my project, made up a result)"
+        - "6. An unusual situation (pasted code, insisting on a capstone answer, off-topic, quitting)"
         - "Not sure"
     validations:
       required: true

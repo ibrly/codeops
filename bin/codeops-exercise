@@ -61,8 +61,10 @@ if (arg === "--report") {
   const field = (e, k) => new RegExp(`^\\s*-?\\s*${k}:\\s*(.+)$`, "m").exec(e)?.[1].trim();
   console.log(entries.length ? `\nHelp logged (${entries.length}):` : "\nNo help logged.");
   for (const e of entries) {
-    const where = field(e, "exercise") ?? (field(e, "file") ? "own project" : "");
-    console.log(`- ${field(e, "date") ?? "?"} · ${field(e, "how") ?? "?"} · ${field(e, "concept") ?? "?"}${where ? ` · ${where}` : ""}${field(e, "retired") ? " · retired" : ""}`);
+    // Concepts logged on the learner's own project can describe their work, so they're left out.
+    const exercise = field(e, "exercise");
+    const concept = exercise ? field(e, "concept") ?? "?" : "own project";
+    console.log(`- ${field(e, "date") ?? "?"} · ${field(e, "how") ?? "?"} · ${concept}${exercise ? ` · ${exercise}` : ""}${field(e, "retired") ? " · retired" : ""}`);
   }
   process.exit(0);
 }

@@ -1,6 +1,7 @@
 #!/bin/sh
 # Prints the CodeOps teaching contract. Skills call this instead of `cat`-ing the file,
 # because Claude Code only lets skill shell injection read files inside the learner's folder.
+case "${1:-}" in -h|--help) echo "Usage: codeops-contract   prints the CodeOps teaching contract (skills load it)"; exit 0 ;; esac
 if ! command -v node >/dev/null 2>&1; then
   echo "NOTE FOR THE TUTOR: Node.js isn't installed, and CodeOps' helper commands need it. Tell the learner"
   echo "to install Node.js 20 or later from https://nodejs.org/ and restart Claude Code before practicing."

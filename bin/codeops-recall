@@ -38,6 +38,11 @@ if (["--help", "-h"].includes(action)) {
   process.exit(0);
 }
 
+if (action === "add" && ["--help", "-h"].includes(process.argv[3])) {
+  console.log(usage);
+  process.exit(0);
+}
+
 if (action === "add") {
   const opts = {};
   const rest = process.argv.slice(3);

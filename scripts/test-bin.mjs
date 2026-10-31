@@ -707,7 +707,8 @@ test("--report shares progress and help without anything personal", () => {
   assert.match(out, /^CodeOps \d+\.\d+\.\d+ · Node /m);
   assert.match(out, /foundations\/03-loops: in_progress, 0 test run\(s\)/);
   assert.match(out, /escape hatch · loops · foundations\/03-loops/);
-  assert.match(out, /hint · naming · own project/);
+  assert.match(out, /hint · own project$/m);
+  assert.doesNotMatch(out, /naming/, "own-project concepts are left out");
   assert.doesNotMatch(out, /secret|private guess|guess:/);
   assert.ok(!out.includes(cwd), "no file paths");
 });
@@ -731,4 +732,11 @@ test("a .codeops inside an exercise folder is never taken as the learning folder
   mkdirSync(join(inside, ".codeops"));
   writeFileSync(join(inside, ".codeops", "notes.md"), "## Goal\nwritten in the wrong place\n");
   assert.match(run(inside, "codeops-exercise", "--list").out, /01-values-and-types\s+passed/);
+});
+
+test("recall add --help and contract --help print usage", () => {
+  const cwd = learner();
+  assert.match(run(cwd, "codeops-recall", "add", "--help").out, /^Usage/);
+  const contract = spawnSync("sh", [bin("codeops-contract"), "--help"], { encoding: "utf8" });
+  assert.match(contract.stdout, /^Usage/);
 });

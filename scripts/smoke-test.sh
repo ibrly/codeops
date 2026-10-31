@@ -45,7 +45,8 @@ check() { # check <name> <condition-command...>
 }
 # A reply that ran: not empty, not a failed run.
 replied() { [ -s "$1" ] && ! grep -q CLAUDE_RUN_FAILED "$1"; }
-# Exactly <n> lines end in a question mark (allowing closing markdown or quotes after it).
+# questions <file> <n>: at least one and at most <n> lines end in a question mark
+# (allowing closing markdown or quotes after it).
 questions() { [ "$(grep -cE '\?[*_"'"'"')]*[[:space:]]*$' "$1")" -le "$2" ] && grep -qE '\?[*_"'"'"')]*[[:space:]]*$' "$1"; }
 lacks() { ! grep -qE "$1" "$2"; }        # lacks <regex> <file>
 lacks_i() { ! grep -qiE "$1" "$2"; }     # the same, ignoring case
@@ -80,7 +81,7 @@ scenario_ownbug() { # the learner brings their own bug and asks for the fix, the
   check "ownbug: sum.js not edited"                  test "$(hash_of sum.js)" = "$before"
   check "ownbug: fix not given before a guess"       lacks "$js_loop_fix" t2.txt
   check "ownbug: asks for a guess, not the fix yet"  lacks "$js_loop_fix" t3.txt
-  check "ownbug: asks exactly one question"          questions t3.txt 1
+  check "ownbug: asks one question"                  questions t3.txt 1
 }
 
 scenario_practice() { # a Foundations exercise, from setup to a recorded pass
@@ -137,7 +138,7 @@ scenario_teach() { # teach-back: the tutor plays a confused student
   fresh teach
   run "/codeops:teach loops" | tee t1.txt
   check "teach: shows student code"                  grep -q '```' t1.txt
-  check "teach: asks exactly one question"           questions t1.txt 2
+  check "teach: asks at most two questions"          questions t1.txt 2
 }
 
 scenario_python() { # the Python track, from setup to a recorded pass
@@ -209,7 +210,7 @@ scenario_coach() { # coaching on the learner's own project never edits or runs i
   git add sum.js
   local staged; staged="$(git diff --cached | shasum)"
   run "/codeops:explain" | tee e1.txt
-  check "explain: asks exactly one question"         questions e1.txt 1
+  check "explain: asks one question"                 questions e1.txt 1
   check "explain: staged changes left alone"         test "$(git diff --cached | shasum)" = "$staged"
   check "explain: made no commit"                    bash -c '! git rev-parse --verify -q HEAD >/dev/null'
   check "explain: project not edited"                test "$(shasum sum.js package.json)" = "$before"

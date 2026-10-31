@@ -220,7 +220,7 @@ Ideas, roughly in priority order. Each will become an issue when someone picks i
 
 ## Contributing
 
-Contributions are welcome, including your first one. The most useful thing right now is to **try it as a learner and tell us where the tutor felt wrong**, using the ["The tutor felt wrong" issue form](https://github.com/ibrly/codeops/issues/new?template=tutor_behavior.yml). Its fields map to the five sections of the [teaching contract](teaching/CONTRACT.md). Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started, and please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues: see [SECURITY.md](SECURITY.md).
+Contributions are welcome, including your first one. The most useful thing right now is to **try it as a learner and tell us where the tutor felt wrong**, using the ["The tutor felt wrong" issue form](https://github.com/ibrly/codeops/issues/new?template=tutor_behavior.yml). Its fields map to the sections of the [teaching contract](teaching/CONTRACT.md). Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started, and please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues: see [SECURITY.md](SECURITY.md).
 
 ## License
 
