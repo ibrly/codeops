@@ -534,3 +534,40 @@ test("a help entry logged while a check is running isn't lost", async () => {
   assert.match(out, /03-loops assisted/);
   assert.strictEqual(progress(cwd).tracks.foundations.exercises["03-loops"].status, "assisted");
 });
+
+test("a .codeops in the home folder doesn't capture a learning folder below it", () => {
+  const home = learner();
+  mkdirSync(join(home, ".codeops"));
+  const project = join(home, "projects", "learn-js");
+  mkdirSync(project, { recursive: true });
+  const { NODE_TEST_CONTEXT, ...env } = process.env;
+  const withHome = (cwd, ...args) =>
+    spawnSync(process.execPath, [bin("codeops-exercise"), ...args], { cwd, encoding: "utf8", env: { ...env, HOME: home, USERPROFILE: home } });
+  assert.match(withHome(project, "3").stdout, /full path: .*learn-js/);
+  assert.ok(existsSync(join(project, "codeops-foundations", "03-loops")));
+  assert.ok(!existsSync(join(home, "codeops-foundations")));
+  // From inside the home folder's own workspace, the home .codeops is still the root.
+  mkdirSync(join(home, "codeops-foundations", "01-values-and-types"), { recursive: true });
+  withHome(join(home, "codeops-foundations", "01-values-and-types"), "--list");
+  assert.ok(!existsSync(join(home, "codeops-foundations", "01-values-and-types", ".codeops")));
+});
+
+test("interrupting a check stops its tests and removes the temp copy", async () => {
+  if (process.platform === "win32") return;
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  writeFileSync(join(cwd, "codeops-foundations", "03-loops", "total.js"), "module.exports = { totalDuration() { for (;;) {} } };\n");
+  const { NODE_TEST_CONTEXT, ...env } = process.env;
+  const { spawn } = await import("node:child_process");
+  const before = new Set(readdirSync(tmpdir()).filter((d) => d.startsWith("codeops-check-")));
+  const check = spawn(process.execPath, [bin("codeops-check"), "3"], { cwd, env: { ...env, CODEOPS_TEST_TIMEOUT_MS: "60000" } });
+  await new Promise((r) => setTimeout(r, 1500));
+  const temp = readdirSync(tmpdir()).find((d) => d.startsWith("codeops-check-") && !before.has(d));
+  check.kill("SIGINT");
+  await new Promise((r) => check.on("close", r));
+  await new Promise((r) => setTimeout(r, 300));
+  assert.ok(temp, "the check should have made a temp copy");
+  assert.ok(!existsSync(join(tmpdir(), temp)), "temp copy removed");
+  const left = spawnSync("pgrep", ["-f", temp], { encoding: "utf8" }).stdout.trim();
+  assert.strictEqual(left, "", "no test process left running");
+});

@@ -107,10 +107,10 @@ if (!fs.existsSync(ignore)) {
   fs.writeFileSync(ignore, "__pycache__/\nnode_modules/\n");
 }
 if (fs.existsSync(target)) {
-  console.log(`Already set up at ${path.relative(cwd, target)}/ (your changes are kept).`);
+  console.log(`Already set up at ${path.relative(cwd, target)}/ (your changes are kept). Full path: ${target}`);
 } else {
   fs.cpSync(path.join(track.exercises, id), target, { recursive: true });
-  console.log(`Set up ${id} at ${path.relative(cwd, target)}/`);
+  console.log(`Set up ${id} at ${path.relative(cwd, target)}/ (full path: ${target})`);
 }
 
 t.trackExercises(progress, track.name)[id] ??= { status: "in_progress", attempts: 0 };
