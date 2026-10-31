@@ -2,7 +2,9 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
-## Unreleased
+## 0.11.1
+
+Smoke-tested: not needed, exercise-only change (see the CONTRIBUTING table); CI verified all 56 exercises, 2026-10-31.
 
 ### Fixed
 
