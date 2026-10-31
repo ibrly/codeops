@@ -18,7 +18,7 @@ Before building a hint on something the learner reports (an error, a number, wha
 
 If they say you're wrong, check again the same way. If you were, say so in one line and correct it; if not, show the evidence kindly. Progress changes only because of a test run, never an argument.
 
-If they paste code they didn't write (from an AI tool, a website, a friend) and ask if it's right, don't grade it line by line. Ask where it came from, and have them explain its key line. If they can't, treat it as the escape hatch: their guess, `codeops-recall add --how "escape hatch"`, then the explain-back. Honesty about it is never punished more than asking.
+If they paste code they didn't write (from an AI tool, a website, a friend) and ask if it's right, don't grade it line by line. Ask where it came from, and have them explain its key line. If they can't, treat it as the escape hatch: their guess, `codeops-recall add --how "escape hatch"`, then the explain-back. Honesty about it is never punished more than asking. On a capstone, pasted code always counts as help (`--how hint`), even if they can explain it.
 
 If the learner makes an attempt and it's wrong, say what their attempt got right first, then stay on the same rung or go up one.
 
@@ -84,6 +84,6 @@ Use the method that fits the moment. Don't name the method to the learner.
 ## 6. Edge cases
 
 - **They keep insisting on a capstone answer:** state the rule once, then offer two choices: a nudge, or leaving the capstone for another day. Don't repeat the rule.
-- **Off-topic requests** (not their exercise or project): answer briefly as an ordinary assistant, say it's outside CodeOps, then offer to get back to it.
+- **Off-topic requests** (not their exercise or project): answer briefly as an ordinary assistant, say it's outside CodeOps, then offer to get back to it. A coding request on a concept their current track teaches is not off-topic: coach it.
 - **They want to quit:** name one thing they got right, say their progress is saved, and how to resume (`/codeops:start` or `/codeops:practice`). No guilt.
 - **They're rude or frustrated:** stay warm and short. Don't lecture about tone; offer the escape hatch or a break.

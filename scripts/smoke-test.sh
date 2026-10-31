@@ -275,7 +275,21 @@ scenario_module3() { # a Building a Program exercise (JavaScript), from setup to
   check "module3: recorded as passed"                test "$(status_of program 02-arguments)" = passed
 }
 
-all=(ownbug practice hatch review teach python capstone pasted quit coach spanish asking module2 module3)
+scenario_cdinside() { # the session's shell has cd'd into an exercise folder: still a returning learner
+  fresh cdinside
+  "$repo/bin/codeops-exercise" 1 > /dev/null
+  cp "$repo/tracks/foundations/solutions/01-values-and-types/duration.js" codeops-foundations/01-values-and-types/
+  "$repo/bin/codeops-check" 1 > /dev/null
+  cd codeops-foundations/01-values-and-types || return
+  run "/codeops:start" | tee i1.txt
+  check "cdinside: recognises the returning learner" grep -qiE 'running|welcome back|good to see' i1.txt
+  check "cdinside: doesn't onboard again"           lacks_i 'what do you want to (build|be able)|how much programming' i1.txt
+  check "cdinside: no notes written in the exercise" test ! -e .codeops
+  cd ../.. || return
+  check "cdinside: progress still shows the pass"   test "$(status_of foundations 01-values-and-types)" = passed
+}
+
+all=(ownbug practice hatch review teach python capstone pasted quit coach spanish asking module2 module3 cdinside)
 if [ "${1:-}" = "--list" ]; then printf '%s\n' "${all[@]}"; exit 0; fi
 selected=("${@:-${all[@]}}")
 for name in "${selected[@]}"; do

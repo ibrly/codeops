@@ -711,3 +711,24 @@ test("--report shares progress and help without anything personal", () => {
   assert.doesNotMatch(out, /secret|private guess|guess:/);
   assert.ok(!out.includes(cwd), "no file paths");
 });
+
+test("notes and log are read from the learning folder, even from inside an exercise", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "1");
+  writeFileSync(join(cwd, ".codeops", "notes.md"), "## Goal\nRunning app\n");
+  const inside = join(cwd, "codeops-foundations", "01-values-and-types");
+  assert.match(run(inside, "codeops-exercise", "--notes").out, /Running app/);
+  assert.match(run(inside, "codeops-exercise", "--log").out, /None logged/);
+  assert.match(run(learner(), "codeops-exercise", "--notes").out, /^NO_NOTES/);
+});
+
+test("a .codeops inside an exercise folder is never taken as the learning folder", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "1");
+  solve(cwd, "foundations", "01-values-and-types");
+  run(cwd, "codeops-check", "1");
+  const inside = join(cwd, "codeops-foundations", "01-values-and-types");
+  mkdirSync(join(inside, ".codeops"));
+  writeFileSync(join(inside, ".codeops", "notes.md"), "## Goal\nwritten in the wrong place\n");
+  assert.match(run(inside, "codeops-exercise", "--list").out, /01-values-and-types\s+passed/);
+});

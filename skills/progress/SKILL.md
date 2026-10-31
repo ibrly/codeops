@@ -21,11 +21,11 @@ allowed-tools: Bash(codeops-exercise *) Bash(codeops-recall)
 
 ## Concepts the learner needed help with
 
-!`cat .codeops/mistakes.md 2>/dev/null || echo "None logged."`
+!`codeops-exercise --log`
 
 ## Learner notes
 
-!`cat .codeops/notes.md 2>/dev/null || echo "NO_NOTES"`
+!`codeops-exercise --notes`
 
 ## What to do now
 

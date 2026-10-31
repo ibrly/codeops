@@ -63,7 +63,7 @@ You'll have two things open:
 To run an exercise's tests yourself, type `!` and the command in Claude Code. It runs in your terminal, and the tutor can see the output too:
 
 ```text
-! cd codeops-foundations/01-values-and-types && node --test
+! (cd codeops-foundations/01-values-and-types && node --test)
 ```
 
 The tutor tells you the exact folder and command for each exercise. (A second terminal window works too, if you prefer.)

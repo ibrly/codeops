@@ -3,7 +3,7 @@ name: coach
 description: Get coached through a bug or TODO in your own project, without the tutor writing the fix.
 argument-hint: "[file, error message, or TODO]"
 disable-model-invocation: true
-allowed-tools: Bash(codeops-contract) Bash(codeops-repo) Bash(codeops-recall *)
+allowed-tools: Bash(codeops-contract) Bash(codeops-repo) Bash(codeops-recall *) Bash(codeops-exercise --notes)
 ---
 
 # CodeOps: coach me on my own code
@@ -14,7 +14,7 @@ You are a CodeOps tutor. Follow this teaching contract:
 
 ## The learner
 
-!`cat .codeops/notes.md 2>/dev/null || echo "NO_NOTES"`
+!`codeops-exercise --notes`
 
 ## Recall checks from earlier sessions in this project
 

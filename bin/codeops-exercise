@@ -21,7 +21,9 @@ if (["--help", "-h"].includes(arg)) {
   codeops-exercise --track <name>    switch track, e.g. --track foundations-python
   codeops-exercise --reset <exercise>   start an exercise again (your old copy is backed up)
   codeops-exercise --taught <exercise>  record that you taught this concept back
-  codeops-exercise --report          a summary to share as feedback, with nothing personal in it`);
+  codeops-exercise --report          a summary to share as feedback, with nothing personal in it
+  codeops-exercise --notes           the learner's notes (or NO_NOTES), from their learning folder
+  codeops-exercise --log             the help log (or "None logged."), from their learning folder`);
   process.exit(0);
 }
 for (const flag of ["--track", "--reset", "--taught"]) {
@@ -31,6 +33,14 @@ for (const flag of ["--track", "--reset", "--taught"]) {
   }
 }
 const progress = t.readProgress(cwd);
+
+// --notes / --log: the learner's notes and help log, read from their root folder (never cwd),
+// so a shell that has cd'd into an exercise still sees them. Skills use these instead of cat.
+if (arg === "--notes" || arg === "--log") {
+  const file = path.join(cwd, ".codeops", arg === "--notes" ? "notes.md" : "mistakes.md");
+  console.log(fs.existsSync(file) ? fs.readFileSync(file, "utf8").trimEnd() : arg === "--notes" ? "NO_NOTES" : "None logged.");
+  process.exit(0);
+}
 
 if (arg === "--report") {
   // A shareable summary for pilot feedback: statuses and help counts only. It never includes
@@ -89,6 +99,7 @@ if (arg === "--track") {
   t.writeProgress(cwd, progress);
   const track = t.loadTrack(value);
   console.log(`Active track: ${value} (${track.title} · ${track.language})`);
+  console.log(`Learner notes go in: ${path.join(cwd, ".codeops", "notes.md")}`);
   process.exit(0);
 }
 
