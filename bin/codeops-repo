@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // A read-only snapshot of the learner's own project for /codeops:coach.
-// It never runs project code: git is called with external diff, textconv, and fsmonitor off,
-// and the test command is only printed, so the learner runs it themselves.
+// It never runs the project's scripts or tests: the test command is only printed, so the learner
+// runs it themselves. Git is called with external diff, textconv, and fsmonitor off. (Clean
+// filters the learner configured in their own repo can still run, as with any `git status`.)
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");

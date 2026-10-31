@@ -39,7 +39,7 @@ const track = t.currentTrack(progress);
 const done = progress.tracks[track.name]?.exercises ?? {};
 
 if (!arg || arg === "--list") {
-  console.log(`Track: ${track.name} · ${track.title} · tests: ${track.test.join(" ")}\n`);
+  console.log(`Track: ${track.name} · ${track.title} · tests: ${track.test.join(" ")} · capstone: ${track.capstone}\n`);
   const next = track.ids.find((id) => !["passed", "assisted"].includes(done[id]?.status));
   for (const id of track.ids) {
     const p = done[id];
