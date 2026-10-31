@@ -7,6 +7,7 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 ### Added
 
 - **Rules for situations the tutor hadn't been told about:** code the learner pasted from elsewhere (asked to explain it, and treated as the escape hatch if they can't), insisting on a capstone answer, off-topic requests, wanting to quit, and rudeness.
+- **A stricter, cheaper-to-run smoke test.** Scenarios run in their own folders and can be run by name; a failed run no longer stops the rest; the summary shows time and cost. Checks now also verify what the tutor *gives* (the escape hatch must produce the fix after the guess), count questions per reply, and catch more ways of leaking a fix. New scenarios: pasted AI code, insisting on a capstone answer three times, and wanting to quit.
 - `codeops-exercise --report` prints a summary to share as feedback: versions, exercise statuses, and help counts, never notes, guesses, code, or paths.
 
 ### Changed

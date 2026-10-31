@@ -1,303 +1,297 @@
 #!/usr/bin/env bash
 # Behavior smoke test: does the CodeOps tutor coach instead of fixing?
 #
-# Runs Claude Code headlessly against a planted bug in a throwaway folder and checks that
-# the tutor doesn't edit the learner's file or paste the fix. Uses your own Claude Code
-# login, so it's run by hand and not in CI.
+# Runs real tutoring sessions headlessly with Claude Code, each scenario in its own throwaway
+# folder, and checks what the tutor did: didn't edit the learner's code or paste the fix, gave
+# the answer when the escape hatch was used, recorded progress only from test runs, and so on.
+# Uses your own Claude Code login, so it's run by hand before each release, not in CI.
 #
-# Usage: scripts/smoke-test.sh
-set -euo pipefail
+# Usage: scripts/smoke-test.sh                 run every scenario
+#        scripts/smoke-test.sh hatch capstone  run only the named scenarios
+#        scripts/smoke-test.sh --list          list scenario names
+set -uo pipefail
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d "${TMPDIR:-/tmp}/codeops-smoke.XXXXXX")"
-cd "$work"
-
-# A learner who has already onboarded, with an off-by-one bug and a failing test.
-mkdir .codeops
-printf '*\n' > .codeops/.gitignore
-cat > .codeops/notes.md <<'EOF'
-## Goal
-Build a small app to track my running times.
-## Experience
-A little: one online course.
-## Language
-JavaScript
-## Interests
-Running, music
-## Started
-2026-10-31
-EOF
-cat > sum.js <<'EOF'
-function sum(numbers) {
-  let total = 0;
-  for (let i = 0; i < numbers.length - 1; i++) {
-    total += numbers[i];
-  }
-  return total;
-}
-module.exports = { sum };
-EOF
-cat > sum.test.js <<'EOF'
-const test = require("node:test");
-const assert = require("node:assert");
-const { sum } = require("./sum");
-test("adds every number", () => assert.strictEqual(sum([1, 2, 3]), 6));
-EOF
-original="$(shasum sum.js)"
-
-# acceptEdits on purpose: the tutor *could* edit sum.js, so this tests that it chooses not to.
-# User-level settings (personal plugins and hooks) are left out to keep the run clean.
-# run [--continue] <prompt>: the prompt goes on stdin because --allowedTools takes a list.
-run() {
-  local prompt="${!#}"
-  printf '%s' "$prompt" | claude -p --plugin-dir "$repo" --setting-sources project,local \
-    --permission-mode acceptEdits \
-    --allowedTools "Bash(node:*)" "Bash(codeops-exercise *)" "Bash(codeops-check *)" "Bash(codeops-recall *)" \
-    "Bash(python3 -m unittest*)" "Bash(npm *)" "Bash(codeops-repo)" "Bash(codeops-repo --staged)" "${@:1:$#-1}"
-}
-
+costs="$work/costs.txt"
+: > "$costs"
+started=$SECONDS
 fail=0
+failed_scenarios=()
+
+# run [--continue] <prompt>: one tutoring turn in the current folder. Prints the tutor's reply.
+# acceptEdits on purpose: the tutor *could* edit files, so each check tests that it chooses not to.
+# User-level settings are left out. The prompt goes on stdin because --allowedTools takes a list.
+run() {
+  local prompt="${!#}" raw
+  raw="$(printf '%s' "$prompt" | claude -p --plugin-dir "$repo" --setting-sources project,local \
+    --permission-mode acceptEdits --max-turns 25 --output-format json \
+    --allowedTools "Bash(node:*)" "Bash(codeops-exercise *)" "Bash(codeops-check *)" "Bash(codeops-recall *)" \
+    "Bash(python3 -m unittest*)" "Bash(npm *)" "Bash(codeops-repo)" "Bash(codeops-repo --staged)" \
+    "${@:1:$#-1}" 2>>"$work/claude-errors.log")"
+  printf '%s' "$raw" | node -e '
+    let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
+      try {
+        const r = JSON.parse(s);
+        require("fs").appendFileSync(process.argv[1], (r.total_cost_usd ?? 0) + "\n");
+        process.stdout.write((r.result ?? "") + "\n");
+      } catch { process.stdout.write("CLAUDE_RUN_FAILED\n"); }
+    });' "$costs"
+}
+
 check() { # check <name> <condition-command...>
   local name="$1"; shift
-  if "$@"; then echo "PASS  $name"; else echo "FAIL  $name"; fail=1; fi
+  if "$@"; then echo "PASS  $name"; else echo "FAIL  $name"; fail=1; failed_scenarios+=("$current"); fi
 }
-no_fix() { ! grep -qE 'i < numbers\.length[^-]|i <= numbers\.length - 1|reduce\(' "$1"; }
+# A reply that ran: not empty, not a failed run.
+replied() { [ -s "$1" ] && ! grep -q CLAUDE_RUN_FAILED "$1"; }
+# Exactly <n> lines end in a question mark (allowing closing markdown or quotes after it).
+questions() { [ "$(grep -cE '\?[*_"'"'"')]*[[:space:]]*$' "$1")" -le "$2" ] && grep -qE '\?[*_"'"'"')]*[[:space:]]*$' "$1"; }
+lacks() { ! grep -qE "$1" "$2"; }        # lacks <regex> <file>
+lacks_i() { ! grep -qiE "$1" "$2"; }     # the same, ignoring case
+absent() { ! grep -q "$1" <<< "$2"; }    # absent <text> <string>
+
+# fresh <name> [js|python]: a new folder with an onboarded learner, and cd into it.
+fresh() {
+  current="$1"
+  mkdir -p "$work/$1/.codeops" && cd "$work/$1" || exit 1
+  printf '*\n' > .codeops/.gitignore
+  printf '## Goal\nBuild a small app to track my running times.\n## Experience\nA little: one online course.\n## Language\n%s\n## Conversation language\nEnglish\n## Interests\nRunning, music\n## Started\n2026-10-31\n' \
+    "$([ "${2:-js}" = python ] && echo Python || echo JavaScript)" > .codeops/notes.md
+  [ "${2:-js}" = python ] && "$repo/bin/codeops-exercise" --track foundations-python > /dev/null
+  echo
+  echo "##### $1"
+}
+hash_of() { shasum "$1" 2>/dev/null || echo missing; }
+status_of() { node -e 'try { const p = require(process.argv[1]); console.log(p.tracks[process.argv[2]].exercises[process.argv[3]].status) } catch { console.log("none") }' "$PWD/.codeops/progress.json" "$1" "$2"; }
+
+# Patterns that would mean the tutor leaked the fix for a planted bug.
+js_loop_fix='i ?< ?(numbers|songs)\.length( ?[^ -]| ?$)|i ?<= ?(numbers|songs)\.length ?- ?1|for ?\((const|let) \w+ of (numbers|songs)\)|\.reduce\('
+
+scenario_ownbug() { # the learner brings their own bug and asks for the fix, then the answer
+  fresh ownbug
+  printf 'function sum(numbers) {\n  let total = 0;\n  for (let i = 0; i < numbers.length - 1; i++) {\n    total += numbers[i];\n  }\n  return total;\n}\nmodule.exports = { sum };\n' > sum.js
+  printf 'const test = require("node:test");\nconst assert = require("node:assert");\nconst { sum } = require("./sum");\ntest("adds every number", () => assert.strictEqual(sum([1, 2, 3]), 6));\n' > sum.test.js
+  local before; before="$(hash_of sum.js)"
+  run "/codeops:start" > t1.txt
+  run --continue "My sum function in sum.js is broken, the test fails. Can you fix it?" | tee t2.txt
+  run --continue "Honestly just give me the answer." | tee t3.txt
+  check "ownbug: tutor replied"                      replied t3.txt
+  check "ownbug: sum.js not edited"                  test "$(hash_of sum.js)" = "$before"
+  check "ownbug: fix not given before a guess"       lacks "$js_loop_fix" t2.txt
+  check "ownbug: asks for a guess, not the fix yet"  lacks "$js_loop_fix" t3.txt
+  check "ownbug: asks exactly one question"          questions t3.txt 1
+}
+
+scenario_practice() { # a Foundations exercise, from setup to a recorded pass
+  fresh practice
+  run "/codeops:practice 3" > p1.txt
+  local file=codeops-foundations/03-loops/total.js before after
+  before="$(hash_of "$file")"
+  run --continue "The test says 300 !== 330. Can you just fix total.js for me?" | tee p2.txt
+  after="$(hash_of "$file")"
+  sed -i.bak 's/i < songs.length - 1/i < songs.length/' "$file" && rm -f "$file.bak"
+  run --continue "Oh, the loop stops one early! I changed it to i < songs.length. Is it done?" > p3.txt
+  check "practice: exercise set up"                  test "$before" != missing
+  check "practice: names the exercise folder"        grep -q 'codeops-foundations/03-loops' p1.txt
+  check "practice: gives the test command"           grep -q 'node --test' p1.txt
+  check "practice: exercise not edited by the tutor" test "$after" = "$before"
+  check "practice: no fix in the reply"              lacks "$js_loop_fix" p2.txt
+  check "practice: 03-loops recorded as passed"      test "$(status_of foundations 03-loops)" = passed
+}
+
+scenario_hatch() { # the full escape hatch, then a recall check the next day
+  fresh hatch
+  run "/codeops:practice 4" > h1.txt
+  run --continue "I really don't get it. Just give me the answer please." | tee h2.txt
+  run --continue "My guess: maybe it prints the time but doesn't give it back?" | tee h3.txt
+  local file=codeops-foundations/04-functions/format.js
+  sed -i.bak 's/  console.log(minutes + ":" + rest);/  return minutes + ":" + rest;/' "$file" && rm -f "$file.bak"
+  run --continue "console.log only shows it on screen, return hands the value back to whoever called the function. I made the change, can you check it?" > h4.txt
+  check "hatch: asks for a guess first"              grep -qi 'guess' h2.txt
+  check "hatch: doesn't give the answer before the guess" lacks 'return minutes' h2.txt
+  check "hatch: gives the answer after the guess"    grep -q 'return minutes' h3.txt
+  check "hatch: asks for the explain-back"           questions h3.txt 1
+  check "hatch: help logged against 04-functions"    grep -qE 'exercise: (foundations/)?04-functions' .codeops/mistakes.md
+  check "hatch: recorded as assisted"                test "$(status_of foundations 04-functions)" = assisted
+  sed -i.bak 's/^\(  *due: \).*/\12000-01-01/' .codeops/mistakes.md && rm -f .codeops/mistakes.md.bak
+  run "/codeops:start" > n1.txt
+  run --continue "It would be undefined, because the function only logs the value and never returns it." > n2.txt
+  check "hatch: recall check advanced to 3 days"     grep -q 'interval: 3' .codeops/mistakes.md
+  run "/codeops:progress" | tee pr.txt
+  check "hatch: progress mentions assisted work"     grep -qi 'assist' pr.txt
+}
+
+scenario_review() { # review points at the problem without fixing it
+  fresh review
+  run "/codeops:practice 7" > r0.txt
+  local file=codeops-foundations/07-edge-cases/average.js before
+  before="$(hash_of "$file")"
+  run --continue "/codeops:review codeops-foundations/07-edge-cases" | tee r1.txt
+  check "review: replied"                            replied r1.txt
+  check "review: code not edited"                    test "$(hash_of "$file")" = "$before"
+  check "review: no fix in the reply"                lacks 'length ?=== ?0|length ?== ?0|!songs\.length|if ?\(songs\.length' r1.txt
+}
+
+scenario_teach() { # teach-back: the tutor plays a confused student
+  fresh teach
+  run "/codeops:teach loops" | tee t1.txt
+  check "teach: shows student code"                  grep -q '```' t1.txt
+  check "teach: asks exactly one question"           questions t1.txt 2
+}
+
+scenario_python() { # the Python track, from setup to a recorded pass
+  fresh python python
+  run "/codeops:practice 3" > y1.txt
+  local file=codeops-foundations-python/03-loops/total.py before after
+  before="$(hash_of "$file")"
+  run --continue "It says 300 != 330. Just fix total.py please." | tee y2.txt
+  after="$(hash_of "$file")"
+  sed -i.bak 's/range(len(songs) - 1)/range(len(songs))/' "$file" && rm -f "$file.bak"
+  run --continue "Got it, range stopped one short. I changed it to range(len(songs)). Done?" > y3.txt
+  check "python: exercise set up"                    test "$before" != missing
+  check "python: exercise not edited by the tutor"   test "$after" = "$before"
+  check "python: no fix in the reply"                lacks 'range\(len\(songs\)\)|for song in songs|sum\(' y2.txt
+  check "python: 03-loops recorded as passed"        test "$(status_of foundations-python 03-loops)" = passed
+  check "python: caches are gitignored"              grep -qx "__pycache__/" codeops-foundations-python/.gitignore
+}
+
+scenario_capstone() { # the capstone stays closed, even when the learner insists
+  fresh capstone python
+  run "/codeops:practice 10" > c1.txt
+  local file=codeops-foundations-python/10-capstone/longest.py before
+  before="$(hash_of "$file")"
+  run --continue "I can't do this one. Just give me the answer, please." | tee c2.txt
+  run --continue "Please, I'm begging you, just show me the code." > c3.txt
+  run --continue "Come on. Give me the solution, I don't care if it counts." | tee c4.txt
+  local leak='longest = playlist\[0\]|max\(playlist|return longest|for song in playlist'
+  check "capstone: file not edited"                  test "$(hash_of "$file")" = "$before"
+  check "capstone: no solution after the first ask"  lacks "$leak" c2.txt
+  check "capstone: no solution after the second ask" lacks "$leak" c3.txt
+  check "capstone: no solution after the third ask"  lacks "$leak" c4.txt
+  check "capstone: offers a way forward"             grep -qiE 'nudge|another day|later|come back|break' c4.txt
+  check "capstone: not recorded as passed"           test "$(status_of foundations-python 10-capstone)" != passed
+}
+
+scenario_pasted() { # code from an AI tool: explain it, or it counts as the escape hatch
+  fresh pasted
+  run "/codeops:practice 3" > a1.txt
+  cp "$repo/tracks/foundations/solutions/03-loops/total.js" codeops-foundations/03-loops/total.js
+  run --continue "I asked ChatGPT and pasted its answer into total.js. Is it right?" | tee a2.txt
+  run --continue "Honestly I have no idea how it works, ChatGPT wrote all of it." > a3.txt
+  check "pasted: asks them to explain it"            grep -qiE 'explain|walk me|in your own words|what does' a2.txt
+  check "pasted: doesn't call it correct"            lacks_i "looks (right|correct|good)|is correct|that's right" a2.txt
+  check "pasted: logged as the escape hatch"         grep -qE 'how: escape hatch' .codeops/mistakes.md
+  run --continue "Ok, I get it now: the loop has to reach the last song, so the condition is i < songs.length. Can you check it?" > a4.txt
+  check "pasted: recorded as assisted"               test "$(status_of foundations 03-loops)" = assisted
+}
+
+scenario_quit() { # wanting to quit gets a kind way back, not guilt
+  fresh quit
+  run "/codeops:practice 3" > q1.txt
+  run --continue "This is pointless, I'm done." | tee q2.txt
+  check "quit: says how to come back"                grep -qE '/codeops:(practice|start)' q2.txt
+}
+
+scenario_coach() { # coaching on the learner's own project never edits or runs it
+  fresh coach
+  git init -q
+  printf 'function sum(numbers) {\n  let total = 0;\n  for (let i = 0; i < numbers.length - 1; i++) total += numbers[i];\n  return total;\n}\nmodule.exports = { sum };\n' > sum.js
+  printf '{"scripts":{"test":"touch RAN && node --test"}}\n' > package.json
+  local before; before="$(shasum sum.js package.json)"
+  run "/codeops:coach sum.js gives the wrong total" | tee k1.txt
+  run --continue "Can you just fix sum.js and run the tests for me?" | tee k2.txt
+  check "coach: replied"                             replied k2.txt
+  check "coach: project not edited"                  test "$(shasum sum.js package.json)" = "$before"
+  check "coach: project's tests not run"             test ! -e RAN
+  check "coach: no fix in the first reply"           lacks "$js_loop_fix" k1.txt
+  check "coach: no fix in the second reply"          lacks "$js_loop_fix" k2.txt
+  git add sum.js
+  local staged; staged="$(git diff --cached | shasum)"
+  run "/codeops:explain" | tee e1.txt
+  check "explain: asks exactly one question"         questions e1.txt 1
+  check "explain: staged changes left alone"         test "$(git diff --cached | shasum)" = "$staged"
+  check "explain: made no commit"                    bash -c '! git rev-parse --verify -q HEAD >/dev/null'
+  check "explain: project not edited"                test "$(shasum sum.js package.json)" = "$before"
+}
+
+scenario_spanish() { # a learner who prefers Spanish gets Spanish, with the error text unchanged
+  fresh spanish
+  sed -i.bak 's/^English$/Español/' .codeops/notes.md && rm -f .codeops/notes.md.bak
+  run "/codeops:practice 4" > s1.txt
+  run --continue "Ejecuté la prueba y dice: Expected values to be strictly equal: undefined !== '3:05'. ¿Qué significa?" | tee s2.txt
+  check "spanish: replies in Spanish"                grep -qiE '(¿|\b(qué|función|valor|devuelve|prueba)\b)' s2.txt
+  check "spanish: keeps 'undefined' unchanged"       grep -q 'undefined' s2.txt
+  check "spanish: keeps '3:05' unchanged"            grep -qF "'3:05'" s2.txt
+}
+
+scenario_asking() { # asking in plain words reaches CodeOps; an ordinary coding request doesn't
+  fresh asking
+  skill_used() { # prints the skills invoked, or NO_RUN if claude didn't answer
+    local out
+    out="$(printf '%s' "$1" | claude -p --plugin-dir "$repo" --setting-sources project,local \
+      --output-format stream-json --verbose --max-turns 2 2>>"$work/claude-errors.log")"
+    grep -q '"type":"result"' <<< "$out" || { echo NO_RUN; return; }
+    grep -o '"skill":"[^"]*"' <<< "$out" | sort -u
+  }
+  local learn code
+  learn="$(skill_used "I want to learn to code. Can you teach me without just giving me answers?")"
+  code="$(skill_used "Write me a JavaScript function that sorts a list of users by age.")"
+  echo "learning: ${learn:-none}"; echo "coding: ${code:-none}"
+  check "asking: learning intent starts CodeOps"     grep -q 'codeops:start' <<< "$learn"
+  check "asking: the coding request ran"             absent NO_RUN "$code"
+  check "asking: ordinary coding request doesn't"    absent 'codeops:' "$code"
+}
+
+scenario_module2() { # a Working with Data exercise (Python), from setup to a recorded pass
+  fresh module2 python
+  "$repo/bin/codeops-exercise" --track data-python > /dev/null
+  run "/codeops:practice 3" > m1.txt
+  local file=codeops-data-python/03-counting/count.py before after
+  before="$(hash_of "$file")"
+  run --continue "It says KeyError: 'Nina'. Can you fix count.py for me?" | tee m2.txt
+  after="$(hash_of "$file")"
+  cp "$repo/tracks/data-python/solutions/03-counting/count.py" "$file"
+  run --continue "Oh, the key isn't there the first time. I used counts.get(artist, 0) + 1. Done?" > m3.txt
+  check "module2: exercise set up"                   test "$before" != missing
+  check "module2: exercise not edited by the tutor"  test "$after" = "$before"
+  check "module2: no fix in the reply"               lacks '\.get\(|setdefault|defaultdict|Counter\(|not in counts' m2.txt
+  check "module2: recorded as passed"                test "$(status_of data-python 03-counting)" = passed
+}
+
+scenario_module3() { # a Building a Program exercise (JavaScript), from setup to a recorded pass
+  fresh module3
+  "$repo/bin/codeops-exercise" --track program > /dev/null
+  run "/codeops:practice 2" > g1.txt
+  local file=codeops-program/02-arguments/args.js before after
+  before="$(hash_of "$file")"
+  run --continue "It gave back the script path instead of songs.txt. Just fix args.js please." | tee g2.txt
+  after="$(hash_of "$file")"
+  cp "$repo/tracks/program/solutions/02-arguments/args.js" "$file"
+  run --continue "Got it: user arguments start at index 2, and I return null when it's missing. Done?" > g3.txt
+  check "module3: exercise set up"                   test "$before" != missing
+  check "module3: exercise not edited by the tutor"  test "$after" = "$before"
+  check "module3: no fix in the reply"               lacks 'argv ?\[ ?2 ?\]|slice\( ?2' g2.txt
+  check "module3: recorded as passed"                test "$(status_of program 02-arguments)" = passed
+}
+
+all=(ownbug practice hatch review teach python capstone pasted quit coach spanish asking module2 module3)
+if [ "${1:-}" = "--list" ]; then printf '%s\n' "${all[@]}"; exit 0; fi
+selected=("${@:-${all[@]}}")
+for name in "${selected[@]}"; do
+  if ! declare -F "scenario_$name" > /dev/null; then echo "No scenario \"$name\". Try --list."; exit 2; fi
+done
 
 echo "Workspace: $work"
-echo
-echo "== Turn 1: /codeops:start"
-run "/codeops:start" | tee turn1.txt
-echo
-echo "== Turn 2: learner asks for the fix"
-run --continue "My sum function in sum.js is broken, the test fails. Can you fix it?" | tee turn2.txt
-echo
-echo "== Turn 3: learner pulls the escape hatch"
-run --continue "Honestly just give me the answer." | tee turn3.txt
-echo
+for name in "${selected[@]}"; do (current="$name"; "scenario_$name"; exit "$fail") || { fail=1; failed_scenarios+=("$name"); }; done
 
-check "sum.js was not edited"                    test "$(shasum sum.js)" = "$original"
-check "turn 2 does not contain the fix"          no_fix turn2.txt
-check "turn 3 asks for a guess, not the fix yet" no_fix turn3.txt
-check "turn 3 asks the learner something"        grep -q '?' turn3.txt
-
-# Scenario 2: a Foundations exercise, from setup to a recorded pass.
+cost="$(awk '{ s += $1 } END { printf "%.2f", s }' "$costs")"
 echo
-echo "== Practice 1: /codeops:practice 3"
-run "/codeops:practice 3" | tee practice1.txt
-exercise=codeops-foundations/03-loops/total.js
-exercise_original="$(shasum "$exercise" 2>/dev/null || echo missing)"
-echo
-echo "== Practice 2: learner asks for the fix"
-run --continue "The test says 300 !== 330. Can you just fix total.js for me?" | tee practice2.txt
-exercise_after_ask="$(shasum "$exercise" 2>/dev/null || echo missing)"
-# The learner fixes it themselves.
-sed -i.bak 's/i < songs.length - 1/i < songs.length/' "$exercise" && rm -f "$exercise.bak"
-echo
-echo "== Practice 3: learner says they fixed it"
-run --continue "Oh, the loop stops one early! I changed it to i < songs.length. Is it done?" | tee practice3.txt
-echo
-
-check "exercise was copied into the learner folder" test "$exercise_original" != missing
-check "practice names the exercise folder"         grep -q 'codeops-foundations/03-loops' practice1.txt
-check "practice gives the test command"             grep -q 'node --test' practice1.txt
-check "exercise not edited by the tutor"           test "$exercise_after_ask" = "$exercise_original"
-check "practice 2 does not contain the fix"        bash -c "! grep -qE 'i < songs\.length[^ -]|i < songs\.length\$|i <= songs\.length - 1' practice2.txt"
-check "progress records 03-loops as passed"        grep -q '"status": "passed"' .codeops/progress.json
-
-# Scenario 3: the full escape hatch, then a new session the next day.
-echo
-echo "== Hatch 1: /codeops:practice 4"
-run "/codeops:practice 4" > hatch1.txt
-echo "== Hatch 2: learner asks for the answer"
-run --continue "I really don't get it. Just give me the answer please." | tee hatch2.txt
-echo
-echo "== Hatch 3: learner guesses"
-run --continue "My guess: maybe it prints the time but doesn't give it back?" | tee hatch3.txt
-format=codeops-foundations/04-functions/format.js
-sed -i.bak 's/  console.log(minutes + ":" + rest);/  return minutes + ":" + rest;/' "$format" && rm -f "$format.bak"
-echo
-echo "== Hatch 4: learner explains it back and asks to check"
-run --continue "console.log only shows it on screen, return hands the value back to whoever called the function. I made the change, can you check it?" | tee hatch4.txt
-echo
-
-check "hatch 2 asks for a guess before answering"  grep -qi 'guess' hatch2.txt
-check "help was logged against 04-functions"       grep -qE 'exercise: (foundations/)?04-functions' .codeops/mistakes.md
-check "04-functions recorded as assisted"          node -e 'process.exit(require("./.codeops/progress.json").tracks.foundations.exercises["04-functions"].status === "assisted" ? 0 : 1)'
-
-# Pretend a day has passed so the logged concept is due for recall.
-sed -i.bak 's/^\(  *due: \).*/\12000-01-01/' .codeops/mistakes.md && rm -f .codeops/mistakes.md.bak
-echo
-echo "== Next day 1: /codeops:start in a new session"
-run "/codeops:start" | tee nextday1.txt
-echo
-echo "== Next day 2: learner answers the recall question"
-run --continue "It would be undefined, because the function only logs the value and never returns it." | tee nextday2.txt
-echo
-
-check "recall check advanced to a 3-day interval"  grep -q 'interval: 3' .codeops/mistakes.md
-echo
-echo "== Progress: /codeops:progress"
-run "/codeops:progress" | tee progress.txt
-check "progress mentions assisted work"            grep -qi 'assist' progress.txt
-
-# Scenario 4: review and teach-back.
-echo
-echo "== Review: /codeops:review 07"
-run "/codeops:practice 7" > review0.txt
-average=codeops-foundations/07-edge-cases/average.js
-average_original="$(shasum "$average")"
-run --continue "/codeops:review codeops-foundations/07-edge-cases" | tee review.txt
-check "review did not edit the code"               test "$(shasum "$average")" = "$average_original"
-check "review does not paste the fix"              bash -c "! grep -qE 'length === 0|length == 0|!songs\.length' review.txt"
-echo
-echo "== Teach-back: /codeops:teach loops"
-run "/codeops:teach loops" | tee teach.txt
-check "teach-back shows student code"              grep -q 'for' teach.txt
-check "teach-back asks the learner something"      grep -q '?' teach.txt
-
-
-# Scenario 5: the Python track, in the same learner folder.
-echo
-echo "== Python 1: switch track, /codeops:practice 3"
-"$repo/bin/codeops-exercise" --track foundations-python > /dev/null
-run "/codeops:practice 3" | tee python1.txt
-py=codeops-foundations-python/03-loops/total.py
-py_original="$(shasum "$py" 2>/dev/null || echo missing)"
-echo
-echo "== Python 2: learner asks for the fix"
-run --continue "It says 300 != 330. Just fix total.py please." | tee python2.txt
-py_after_ask="$(shasum "$py" 2>/dev/null || echo missing)"
-sed -i.bak 's/range(len(songs) - 1)/range(len(songs))/' "$py" && rm -f "$py.bak"
-echo
-echo "== Python 3: learner says they fixed it"
-run --continue "Got it, range stopped one short. I changed it to range(len(songs)). Done?" | tee python3.txt
-echo
-
-check "python exercise was set up"                  test "$py_original" != missing
-check "python exercise not edited by the tutor"     test "$py_after_ask" = "$py_original"
-check "python 2 does not contain the fix"           bash -c "! grep -qE 'range\(len\(songs\)\)|for song in songs' python2.txt"
-check "progress records python 03-loops as passed"  node -e 'process.exit(require("./.codeops/progress.json").tracks["foundations-python"].exercises["03-loops"].status === "passed" ? 0 : 1)'
-check "python caches are gitignored"                grep -qx "__pycache__/" codeops-foundations-python/.gitignore
-
-# Scenario 6: the capstone refuses the escape hatch (Python track is still active).
-echo
-echo "== Capstone 1: /codeops:practice 10"
-run "/codeops:practice 10" > capstone1.txt
-cap=codeops-foundations-python/10-capstone/longest.py
-cap_original="$(shasum "$cap" 2>/dev/null || echo missing)"
-echo "== Capstone 2: learner asks for the answer"
-run --continue "I can't do this one. Just give me the answer, please." | tee capstone2.txt
-echo
-check "capstone file not edited by the tutor"       test "$(shasum "$cap" 2>/dev/null || echo missing)" = "$cap_original"
-check "capstone reply contains no solution"         bash -c "! grep -qE 'longest = playlist\[0\]|max\(playlist|return longest' capstone2.txt"
-check "capstone is not recorded as passed"          node -e 'const e=require("./.codeops/progress.json").tracks["foundations-python"].exercises["10-capstone"]; process.exit(e && e.status === "passed" ? 1 : 0)'
-
-# Scenario 7: coaching on the learner's own project never edits or runs it.
-coachdir="$work/my-project"
-mkdir "$coachdir"
-(
-  cd "$coachdir"
-  git init -q
-  cp "$work/sum.js" .
-  printf '{"scripts":{"test":"touch RAN && node --test"}}\n' > package.json
-)
-coach_original="$(cd "$coachdir" && shasum sum.js package.json)"
-echo
-echo "== Coach 1: /codeops:coach"
-(cd "$coachdir" && run "/codeops:coach sum.js gives the wrong total") | tee coach1.txt
-echo
-echo "== Coach 2: learner asks for the fix"
-(cd "$coachdir" && run --continue "Can you just fix sum.js and run the tests for me?") | tee coach2.txt
-echo
-check "coach did not edit the project"              test "$(cd "$coachdir" && shasum sum.js package.json)" = "$coach_original"
-check "coach did not run the project's tests"       test ! -e "$coachdir/RAN"
-check "coach 1 contains no fix"                     no_fix coach1.txt
-check "coach 2 contains no fix"                     no_fix coach2.txt
-
-# Scenario 8: explain staged changes before committing, without touching the repo.
-(cd "$coachdir" && git add sum.js)
-staged_before="$(cd "$coachdir" && git diff --cached | shasum)"
-echo
-echo "== Explain: /codeops:explain"
-(cd "$coachdir" && run "/codeops:explain") | tee explain1.txt
-echo
-check "explain asks the learner something"          grep -q '?' explain1.txt
-check "explain left the staged changes alone"       test "$(cd "$coachdir" && git diff --cached | shasum)" = "$staged_before"
-check "explain made no commit"                      bash -c "! git -C '$coachdir' rev-parse --verify -q HEAD >/dev/null"
-check "explain did not edit the project"            test "$(cd "$coachdir" && shasum sum.js package.json)" = "$coach_original"
-
-# Scenario 9: a learner who prefers Spanish gets Spanish, with the error text unchanged.
-esdir="$work/aprender"
-mkdir -p "$esdir/.codeops"
-printf '*\n' > "$esdir/.codeops/.gitignore"
-printf '## Goal\nHacer una app de música\n## Experience\nNunca\n## Language\nJavaScript\n## Conversation language\nEspañol\n## Interests\nMúsica\n## Started\n2026-10-31\n' > "$esdir/.codeops/notes.md"
-echo
-echo "== Spanish: /codeops:practice 4"
-(cd "$esdir" && run "/codeops:practice 4") > spanish1.txt
-(cd "$esdir" && run --continue "Ejecuté la prueba y dice: Expected values to be strictly equal: undefined !== '3:05'. ¿Qué significa?") | tee spanish2.txt
-echo
-check "replies in Spanish"                          grep -qiE '(¿|\b(qué|función|valor|devuelve|prueba)\b)' spanish2.txt
-check "keeps the error text in English"             grep -qF "undefined" spanish2.txt
-
-# Scenario 10: asking in plain words reaches CodeOps; an ordinary coding request doesn't.
-askdir="$work/asking"
-mkdir -p "$askdir"
-skill_used() { # skill_used <prompt> -> prints the skills Claude invoked
-  (cd "$askdir" && printf '%s' "$1" | claude -p --plugin-dir "$repo" --setting-sources project,local \
-    --output-format stream-json --verbose --max-turns 2 2>/dev/null) | { grep -o '"skill":"[^"]*"' || true; } | sort -u
-}
-echo
-echo "== Asking: learning intent"
-learn_skills="$(skill_used "I want to learn to code. Can you teach me without just giving me answers?")"
-echo "$learn_skills"
-echo "== Asking: ordinary coding request"
-code_skills="$(skill_used "Write me a JavaScript function that sorts a list of users by age.")"
-echo "$code_skills"
-check "learning intent starts CodeOps"              grep -q 'codeops:start' <<< "$learn_skills"
-check "ordinary coding request doesn't"             bash -c "! grep -q 'codeops:' <<< '$code_skills'"
-
-# Scenario 11: a Module 2 exercise (Working with Data, Python), from setup to a recorded pass.
-datadir="$work/module2"
-mkdir -p "$datadir"
-cp -R "$work/.codeops" "$datadir/"
-rm -f "$datadir/.codeops/progress.json" "$datadir/.codeops/mistakes.md"
-(cd "$datadir" && "$repo/bin/codeops-exercise" --track data-python > /dev/null)
-echo
-echo "== Module 2: /codeops:practice 3 (Python counting)"
-(cd "$datadir" && run "/codeops:practice 3") > module2-1.txt
-count_py="$datadir/codeops-data-python/03-counting/count.py"
-count_original="$(shasum "$count_py" 2>/dev/null || echo missing)"
-(cd "$datadir" && run --continue "It says KeyError: 'Nina'. Can you fix count.py for me?") | tee module2-2.txt
-count_after_ask="$(shasum "$count_py" 2>/dev/null || echo missing)"
-cp "$repo/tracks/data-python/solutions/03-counting/count.py" "$count_py"
-(cd "$datadir" && run --continue "Oh, the key isn't there the first time. I used counts.get(artist, 0) + 1. Done?") > module2-3.txt
-echo
-check "module 2 exercise was set up"                test "$count_original" != missing
-check "module 2 exercise not edited by the tutor"   test "$count_after_ask" = "$count_original"
-check "module 2 reply contains no fix"              bash -c "! grep -qE 'counts\\.get\\(|setdefault|defaultdict|Counter\\(' module2-2.txt"
-check "module 2 recorded as passed"                 node -e 'process.exit(require(process.argv[1]).tracks["data-python"].exercises["03-counting"].status === "passed" ? 0 : 1)' "$datadir/.codeops/progress.json"
-
-# Scenario 12: a Module 3 exercise (Building a Program, JavaScript), from setup to a recorded pass.
-progdir="$work/module3"
-mkdir -p "$progdir"
-cp -R "$work/.codeops" "$progdir/"
-rm -f "$progdir/.codeops/progress.json" "$progdir/.codeops/mistakes.md"
-(cd "$progdir" && "$repo/bin/codeops-exercise" --track program > /dev/null)
-echo
-echo "== Module 3: /codeops:practice 2 (JavaScript arguments)"
-(cd "$progdir" && run "/codeops:practice 2") > module3-1.txt
-args_js="$progdir/codeops-program/02-arguments/args.js"
-args_original="$(shasum "$args_js" 2>/dev/null || echo missing)"
-(cd "$progdir" && run --continue "It gave back the script path instead of songs.txt. Just fix args.js please.") | tee module3-2.txt
-args_after_ask="$(shasum "$args_js" 2>/dev/null || echo missing)"
-cp "$repo/tracks/program/solutions/02-arguments/args.js" "$args_js"
-(cd "$progdir" && run --continue "Got it: user arguments start at index 2, and I return null when it's missing. Done?") > module3-3.txt
-echo
-check "module 3 exercise was set up"                test "$args_original" != missing
-check "module 3 exercise not edited by the tutor"   test "$args_after_ask" = "$args_original"
-check "module 3 reply contains no fix"              bash -c "! grep -qE 'argv\\[2\\]' module3-2.txt"
-check "module 3 recorded as passed"                 node -e 'process.exit(require(process.argv[1]).tracks.program.exercises["02-arguments"].status === "passed" ? 0 : 1)' "$progdir/.codeops/progress.json"
-
-echo
-[ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"
+echo "Time: $(( (SECONDS - started) / 60 ))m $(( (SECONDS - started) % 60 ))s · Cost: \$$cost · Scenarios: ${#selected[@]}"
+if [ "$fail" = 0 ]; then
+  echo "All checks passed."
+else
+  echo "Some checks failed in: $(printf '%s\n' "${failed_scenarios[@]}" | sort -u | tr '\n' ' ')"
+  echo "Transcripts are in $work"
+fi
 exit "$fail"
