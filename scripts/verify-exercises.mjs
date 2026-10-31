@@ -74,7 +74,17 @@ function lint(track) {
   return problems;
 }
 
+// Optional filter: `verify-exercises.mjs foundations` (a track) or `foundations/03-loops` (one exercise).
+const [onlyTrack, onlyExercise] = (process.argv[2] ?? "").split("/");
+// Locally, a missing Python skips the Python tracks with a warning. CI never skips.
+const pythonMissing = t.checkRuntime({ test: ["python3"] }) !== null;
+
 for (const name of readdirSync(t.tracksDir)) {
+  if (onlyTrack && name !== onlyTrack) continue;
+  if (pythonMissing && name.endsWith("-python") && !process.env.CI) {
+    console.log(`skip  ${name}: Python 3.10+ isn't installed (CI checks it)`);
+    continue;
+  }
   const track = t.loadTrack(name);
   if (!track) {
     fail(`tracks/${name}`, ["no track.json"]);
@@ -85,7 +95,7 @@ for (const name of readdirSync(t.tracksDir)) {
     fail(name, structural);
     continue;
   }
-  for (const id of track.ids) {
+  for (const id of track.ids.filter((id) => !onlyExercise || id === onlyExercise)) {
     const solution = join(track.dir, "solutions", id);
     const work = mkdtempSync(join(tmpdir(), "codeops-verify-"));
     cpSync(join(track.exercises, id), work, { recursive: true });
@@ -126,8 +136,8 @@ for (const name of readdirSync(t.tracksDir)) {
 
 // Language versions of a module (X and X-python) must line up: same count, numbering, and capstone.
 // Names may differ where the languages do (05-arrays vs 05-lists).
-for (const name of readdirSync(t.tracksDir)) {
-  if (!name.endsWith("-python")) continue;
+for (const name of onlyTrack ? [] : readdirSync(t.tracksDir)) {
+  if (!name.endsWith("-python") || pythonMissing) continue;
   const py = t.loadTrack(name);
   const js = t.loadTrack(name.slice(0, -"-python".length));
   if (!py || !js) continue;

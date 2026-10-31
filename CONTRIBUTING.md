@@ -14,13 +14,15 @@ Thanks for wanting to help! CodeOps is a project about learning, so first-time c
 1. **Open or find an issue first** for anything bigger than a typo, so we can agree on the approach before you spend time on it.
 2. **Fork** the repository and create a branch: `git checkout -b fix-readme-typo`.
 3. **Make your change.** Keep it focused: one pull request, one idea.
-4. **Run the checks locally** (requires [Node.js](https://nodejs.org/) 20 or newer, no install step):
+4. **Run the checks locally** (requires [Node.js](https://nodejs.org/) 20 or newer, and [Python](https://www.python.org/) 3.10 or newer for the Python tracks; no install step):
 
    ```bash
    node scripts/check-links.mjs
    node scripts/verify-exercises.mjs
    node --test scripts/test-bin.mjs
    ```
+
+   To check only what you changed, name a track or one exercise: `node scripts/verify-exercises.mjs foundations` or `node scripts/verify-exercises.mjs foundations/03-loops`. Without Python installed, the Python tracks are skipped locally with a warning; CI always checks them.
 
    If you have Claude Code, also run `claude plugin validate --strict .`, and for changes to skills or the contract, `scripts/smoke-test.sh`. The smoke test runs real tutoring sessions headlessly with your own Claude login, so it isn't part of CI.
 
@@ -47,7 +49,7 @@ Exercise tests run on learners' own computers, so every new or changed exercise 
 - **Nothing unbuilt in the repo.** No placeholder files, empty tracks, or "coming soon" stubs. If it isn't working, it lives in an issue, not a directory.
 - **No new dependencies** without discussing it first. The project aims to run with plain Node.js.
 - **Respect learner privacy.** Never commit real learner progress, transcripts, or personal data, even as examples.
-- **Teach, don't solve.** Content and prompts should guide learners toward answers, following the hint ladder described in the plan.
+- **Teach, don't solve.** Content and prompts should guide learners toward answers, following the hint ladder in [teaching/CONTRACT.md](teaching/CONTRACT.md#1-the-hint-ladder).
 
 ## Code of Conduct
 

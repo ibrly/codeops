@@ -6,7 +6,7 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 
 ### Changed
 
-- **Every exercise now has a wrong-fix fixture** (44 of 44), and `verify-exercises` requires one. Filling in the remaining 38 found four more test holes, now closed in both languages: reading a file with the wrong encoding or keeping whitespace-only lines (03-reading-files), and saving by appending or by swapping quotes in Python's notation (04-saving-json).
+- **Every exercise now has a wrong-fix fixture** (44 of 44), and `verify-exercises` requires one, so `scripts/wrong-fixture-backlog.txt` is removed. `verify-exercises` can check one track or exercise (`foundations/03-loops`), and skips the Python tracks locally when Python isn't installed. Filling in the remaining 38 found four more test holes, now closed in both languages: reading a file with the wrong encoding or keeping whitespace-only lines (03-reading-files), and saving by appending or by swapping quotes in Python's notation (04-saving-json).
 
 ## 0.8.0
 
