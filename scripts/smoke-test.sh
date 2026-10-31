@@ -98,6 +98,7 @@ run --continue "Oh, the loop stops one early! I changed it to i < songs.length. 
 echo
 
 check "exercise was copied into the learner folder" test "$exercise_original" != missing
+check "practice gives the exact folder and command" grep -qE 'codeops-foundations/03-loops.*node --test|node --test.*codeops-foundations/03-loops' practice1.txt
 check "exercise not edited by the tutor"           test "$exercise_after_ask" = "$exercise_original"
 check "practice 2 does not contain the fix"        bash -c "! grep -qE 'i < songs\.length[^ -]|i < songs\.length\$|i <= songs\.length - 1' practice2.txt"
 check "progress records 03-loops as passed"        grep -q '"status": "passed"' .codeops/progress.json

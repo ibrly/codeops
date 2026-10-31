@@ -43,6 +43,21 @@ You need [Claude Code](https://code.claude.com/docs) (v2.1.275 or later) and [No
 
 The tutor asks about your goals, your experience, and whether you want to learn with JavaScript or Python, then you're off. The first time it runs one of its helper commands (`codeops-check` to run your tests, `codeops-recall` to schedule a review), Claude Code asks for permission. Choose the option to allow it from now on.
 
+### How a session works
+
+You'll have two things open:
+
+- **A code editor** for writing your fixes. Any editor works; [VS Code](https://code.visualstudio.com/) is a free, popular choice. Open your learning folder in it, and the exercises appear inside `codeops-<track>/`.
+- **Claude Code**, where you talk with the tutor.
+
+To run an exercise's tests yourself, type `!` and the command in Claude Code. It runs in your terminal, and the tutor can see the output too:
+
+```text
+! cd codeops-foundations/01-values-and-types && node --test
+```
+
+The tutor tells you the exact folder and command for each exercise. (A second terminal window works too, if you prefer.)
+
 ## If something goes wrong
 
 | What you see | What to do |
