@@ -2,7 +2,9 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
-## Unreleased
+## 0.11.0
+
+Smoke-tested: 71/71 checks in 16 scenarios, 1m 39s, $9.11, Claude Code 2.1.314, 2026-10-31.
 
 ### Added
 
