@@ -2,6 +2,12 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Added
+
+- **Module 4: Structuring a Program**, in JavaScript (`structure`) and Python (`structure-python`): classes, methods, keeping state, returning instead of printing, saving and reloading objects, and a capstone `Playlist` class that's also a command-line program. Building a Program now points to it as the next track. Like every exercise, each ships a wrong-fix fixture.
+
 ## 0.10.0
 
 Smoke-tested: 67/67 checks in 15 scenarios, 1m 44s, $8.38, Claude Code 2.1.314, 2026-10-31.

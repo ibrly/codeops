@@ -4,7 +4,7 @@
 
 CodeOps is an open-source [Claude Code](https://code.claude.com/docs) plugin that teaches programming by making you think instead of handing you solutions. You fix small, deliberately broken programs, and an AI tutor coaches you to the answer one hint at a time.
 
-> **Status: early.** Three modules in JavaScript and Python, every exercise verified in CI, and real tutoring sessions smoke-tested in all three: Programming Foundations (10 exercises), Working with Data (6), and Building a Program (6). Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
+> **Status: early.** Four modules in JavaScript and Python, with every exercise verified in CI: Programming Foundations (10 exercises), Working with Data (6), Building a Program (6), and Structuring a Program (6). Real tutoring sessions are smoke-tested in every module. Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
 
 ## Why CodeOps exists
 
@@ -184,6 +184,19 @@ The third module, where the playlist code becomes a real program you run from th
 4. Saving data as JSON
 5. Waiting for slow work with `async`/`await`, run as a program (JavaScript), or a file that's both a program and a module (Python)
 6. **Capstone:** a complete `stats` command that reads a playlist file and prints a summary, with a clean error for a missing file
+
+## Structuring a Program
+
+Track names: `structure` (JavaScript) · `structure-python`
+
+The fourth module, for building something bigger than one script: keeping data together with the functions that change it, the way a real app (like a running-times tracker) is organized.
+
+1. Classes: objects that carry their own data
+2. Methods, and calling one method from another
+3. Keeping state between calls
+4. Returning values instead of printing them
+5. Saving objects and loading them back
+6. **Capstone:** a `Playlist` class that also works as a command-line program, saving to a JSON file and rejecting bad input with a clear error
 
 ## Your data stays local
 

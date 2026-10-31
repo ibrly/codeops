@@ -292,7 +292,23 @@ scenario_cdinside() { # the session's shell has cd'd into an exercise folder: st
   check "cdinside: progress still shows the pass"   test "$(status_of foundations 01-values-and-types)" = passed
 }
 
-all=(ownbug practice hatch review teach python capstone pasted quit coach spanish asking module2 module3 cdinside)
+scenario_module4() { # a Structuring a Program exercise (Python), from setup to a recorded pass
+  fresh module4 python
+  "$repo/bin/codeops-exercise" --track structure-python > /dev/null
+  run "/codeops:practice 3" > s1.txt
+  local file=codeops-structure-python/03-keeping-state/player.py before after
+  before="$(hash_of "$file")"
+  run --continue "next() keeps giving back the second song. Can you just fix player.py?" | tee s2.txt
+  after="$(hash_of "$file")"
+  cp "$repo/tracks/structure-python/solutions/03-keeping-state/player.py" "$file"
+  run --continue "Oh, I never stored the new position on self. I assign self.position now. Done?" > s3.txt
+  check "module4: exercise set up"                   test "$before" != missing
+  check "module4: exercise not edited by the tutor"  test "$after" = "$before"
+  check "module4: no fix in the reply"               lacks 'self\.position ?= ?\(|self\.position \+= ?1' s2.txt
+  check "module4: recorded as passed"                test "$(status_of structure-python 03-keeping-state)" = passed
+}
+
+all=(ownbug practice hatch review teach python capstone pasted quit coach spanish asking module2 module3 module4 cdinside)
 quick=(ownbug hatch capstone pasted)
 if [ "${1:-}" = "--list" ]; then printf '%s\n' "${all[@]}"; exit 0; fi
 if [ "${1:-}" = "--quick" ]; then selected=("${quick[@]}"); else selected=("${@:-${all[@]}}"); fi

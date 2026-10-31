@@ -1,6 +1,10 @@
 {
   "title": "Building a Program",
   "language": "JavaScript",
-  "test": ["node", "--test"],
-  "capstone": "06-capstone"
+  "test": [
+    "node",
+    "--test"
+  ],
+  "capstone": "06-capstone",
+  "next": "structure"
 }

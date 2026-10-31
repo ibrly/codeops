@@ -1,0 +1,6 @@
+{
+  "title": "Structuring a Program",
+  "language": "JavaScript",
+  "test": ["node", "--test"],
+  "capstone": "06-capstone"
+}

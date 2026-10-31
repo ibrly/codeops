@@ -1,6 +1,11 @@
 {
   "title": "Building a Program (Python)",
   "language": "Python",
-  "test": ["python3", "-m", "unittest"],
-  "capstone": "06-capstone"
+  "test": [
+    "python3",
+    "-m",
+    "unittest"
+  ],
+  "capstone": "06-capstone",
+  "next": "structure-python"
 }

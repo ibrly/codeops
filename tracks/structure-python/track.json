@@ -1,0 +1,6 @@
+{
+  "title": "Structuring a Program (Python)",
+  "language": "Python",
+  "test": ["python3", "-m", "unittest"],
+  "capstone": "06-capstone"
+}
