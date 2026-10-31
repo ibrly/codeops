@@ -4,7 +4,7 @@
 
 CodeOps is an open-source [Claude Code](https://code.claude.com/docs) plugin that teaches programming by making you think instead of handing you solutions. You fix small, deliberately broken programs, and an AI tutor coaches you to the answer one hint at a time.
 
-> **Status: early.** Three modules in JavaScript and Python, every exercise verified in CI, with real tutoring sessions smoke-tested in Foundations and Working with Data: Programming Foundations (10 exercises), Working with Data (6), and Building a Program (6). Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
+> **Status: early.** Three modules in JavaScript and Python, every exercise verified in CI, and real tutoring sessions smoke-tested in all three: Programming Foundations (10 exercises), Working with Data (6), and Building a Program (6). Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
 
 ## Why CodeOps exists
 

@@ -2,11 +2,14 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
-## Unreleased
+## 0.8.0
+
+Smoke-tested: 47/47 checks, Claude Code 2.1.314, 2026-10-31.
 
 ### Fixed
 
 - **Only the shipped tests count.** A second review found that an early exit plus an extra learner test file (or a skipped Python module plus a learner `test_mine.py`) could still record *passed*. The check now runs only the exercise's shipped test files and requires exactly their number of tests to pass, with none skipped.
+- The smoke test now covers a Building a Program exercise too, so all three modules are tested with real tutoring sessions.
 - The home-folder rule now holds when the home path's letter case differs (macOS, and Windows where `c:\` vs `C:\` is common).
 - On Windows, `--reset` copies and empties a folder that's in use instead of crashing, and progress writes retry briefly when another program has the file open.
 - CI requires each reference solution to run exactly the counted number of tests, and applies `wrong/` fixtures on top of the reference solution.
