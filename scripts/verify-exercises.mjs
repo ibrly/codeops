@@ -3,10 +3,11 @@
 // and pass once the reference solution files are copied over it.
 import { readdirSync, existsSync, mkdtempSync, cpSync, rmSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 
-const root = resolve(dirname(new URL(import.meta.url).pathname), "..");
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const t = createRequire(import.meta.url)(join(root, "lib", "tracks.js"));
 
 let failures = 0;

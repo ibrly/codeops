@@ -19,7 +19,7 @@ CodeOps flips the default. The tutor:
 
 ## Quick start
 
-You need [Claude Code](https://code.claude.com/docs) (v2.1.275 or later) and [Node.js](https://nodejs.org/) 18 or later, which the helper scripts run on. For the Python track you also need [Python](https://www.python.org/) 3.10 or later.
+You need [Claude Code](https://code.claude.com/docs) (v2.1.275 or later) and [Node.js](https://nodejs.org/) 20 or later, which the helper scripts run on. For the Python track you also need [Python](https://www.python.org/) 3.10 or later.
 
 1. **Install the plugin.** In Claude Code, run:
 

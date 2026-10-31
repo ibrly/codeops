@@ -4,10 +4,11 @@ import test from "node:test";
 import assert from "node:assert";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, cpSync, existsSync, rmSync, readdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-const root = resolve(dirname(new URL(import.meta.url).pathname), "..");
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const bin = (name) => join(root, "bin", name);
 
 function learner() {

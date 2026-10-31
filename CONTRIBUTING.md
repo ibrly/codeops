@@ -14,11 +14,12 @@ Thanks for wanting to help! CodeOps is a project about learning, so first-time c
 1. **Open or find an issue first** for anything bigger than a typo, so we can agree on the approach before you spend time on it.
 2. **Fork** the repository and create a branch: `git checkout -b fix-readme-typo`.
 3. **Make your change.** Keep it focused: one pull request, one idea.
-4. **Run the checks locally** (requires [Node.js](https://nodejs.org/) 18 or newer, no install step):
+4. **Run the checks locally** (requires [Node.js](https://nodejs.org/) 20 or newer, no install step):
 
    ```bash
    node scripts/check-links.mjs
    node scripts/verify-exercises.mjs
+   node --test scripts/test-bin.mjs
    ```
 
    If you have Claude Code, also run `claude plugin validate --strict .`, and for changes to skills or the contract, `scripts/smoke-test.sh`. The smoke test runs real tutoring sessions headlessly with your own Claude login, so it isn't part of CI.

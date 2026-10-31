@@ -1,0 +1,3 @@
+# Keep LF line endings everywhere, so the #! lines in bin/ work after a Windows checkout.
+* text=auto eol=lf
+*.png binary

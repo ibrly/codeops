@@ -3,8 +3,9 @@
 // External (http/https/mailto) links are skipped so the check works offline.
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join, dirname, resolve, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = resolve(dirname(new URL(import.meta.url).pathname), "..");
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const skipDirs = new Set([".git", "node_modules", ".codeops"]);
 
 function markdownFiles(dir) {
