@@ -2,6 +2,12 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Changed
+
+- **Less duplication.** The recall warm-up and the capstone rule are each stated once, in the contract; skills point to it. The methods table in the contract renders all seven rows again. `docs/mission.md`, the original v0.1 build plan, is removed (it's in git history) because it described an outdated layout.
+
 ## 0.7.0
 
 ### Changed

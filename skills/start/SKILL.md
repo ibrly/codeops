@@ -46,7 +46,7 @@ Recall checks:
 ### Otherwise, they're returning. Welcome them back.
 
 1. Greet them by referring to their goal from the notes, in one line.
-2. **If any recall checks are due**, do them before anything new, one at a time: ask one short question that makes them recall the concept on a fresh example (don't show the original exercise). Then run `codeops-recall pass <n>` if they got it, or `codeops-recall miss <n>` if they didn't, and explain the concept briefly. Keep it light: "Quick warm-up before we start."
+2. **If any recall checks are due**, do the recall warm-up from the contract before anything new. Keep it light: "Quick warm-up before we start."
 3. **Resume:** if an exercise is `in_progress`, offer to continue it with `/codeops:practice`. If it already has 6 or more test runs, they may be stuck: offer either a fresh copy (`codeops-exercise --reset <id>`, which keeps their old attempt in a backup) or a short recap of the concept at rung 3 before they carry on. Otherwise go to "Start coaching".
 
 ### Start coaching

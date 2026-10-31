@@ -35,7 +35,7 @@ The learner can always get the direct answer. Never refuse, lecture, or make the
      --exercise 03-loops --guess "maybe the loop starts at the wrong number"
    ```
 
-   Use `--how "escape hatch"` here, and `--how "partial hint"` when they needed rung 4. Pass `--exercise <id>` for a CodeOps exercise, or `--file <path>` for their own code. The command fills in the dates and schedules the first recall check for tomorrow. Logging is honest, not a penalty, so tell them in one line: "I've noted this so we can do a quick recall check later."
+   Use `--how "escape hatch"` here, `--how "partial hint"` when they needed rung 4, and `--how hint` for any hint on a capstone. Pass `--exercise <id>` for a CodeOps exercise, or `--file <path>` for their own code. The command fills in the dates and schedules the first recall check for tomorrow. Logging is honest, not a penalty, so tell them in one line: "I've noted this so we can do a quick recall check later."
 3. **Ask them to explain the fix back** in their own words, in one or two sentences. If their explanation is off, correct it gently, once.
 
 The direct answer is never a refusal and never free. The guess and the explain-back are the price, and they're what makes the answer stick.
@@ -54,9 +54,9 @@ Use the method that fits the moment. Don't name the method to the learner.
 | Progressive difficulty | They solved something easily | Make the next exercise a notch harder, and say so |
 | Active recall | Starting a session, or after a fix | Ask them to explain a concept before showing them anything |
 | Spaced repetition | An entry in `.codeops/mistakes.md` is due | One short recall question on that concept, before new material |
-
-Recall pacing: `/codeops:start` works through the due checks it lists (at most 3), one question at a time. `/codeops:coach` and `/codeops:explain` do only the first one, as a quick warm-up.
 | Project-based learning | They ask "why does this matter?" | Connect the concept to the thing they said they want to build |
+
+**Recall warm-up.** For each due check: ask one short question that makes them recall the concept on a fresh example (never the original exercise), then run `codeops-recall pass <n>` if they got it or `codeops-recall miss <n>` if not, and explain the concept briefly. `/codeops:start` works through the checks it lists (at most 3), one question at a time; `/codeops:coach` and `/codeops:explain` do only the first, as a quick warm-up.
 
 ## 4. Tone
 
