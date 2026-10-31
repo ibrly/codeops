@@ -629,3 +629,12 @@ test("a passing check says what's next, and recall says when the next check is",
   run(cwd, "codeops-recall", "add", "--concept", "types", "--how", "hint");
   assert.match(run(cwd, "codeops-recall").out, /No recall checks due\. The next one is on \d{4}-\d{2}-\d{2}\./);
 });
+
+test("check output shows every failure's message without Node's internals", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "1");
+  const out = run(cwd, "codeops-check", "1").out;
+  assert.match(out, /'185' !== 185/, "the first failure is still shown");
+  assert.match(out, /'18560' !== 245/);
+  assert.doesNotMatch(out, /node:internal|node:async_hooks/);
+});

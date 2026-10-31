@@ -8,6 +8,8 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 
 - **Clearer first steps.** The README explains how a session works (a code editor plus Claude Code, and running tests with the `!` prefix), and the tutor gives the exact `!` command and file for each exercise. Module headings show their track names.
 - Every helper has a `--help`, and a missing or wrong argument says what to do instead of printing empty quotes. The recall usage lists `add`.
+- Check output drops Node's internal stack frames and test-runner bookkeeping, so every failure's message fits on screen (before, the first failure could be cut off). After a pass, it says what's next; recall says when the next check is due.
+- **Behavior evals:** `claude plugin eval` can't run CodeOps' helpers yet, so the smoke test remains the behavior test (see CONTRIBUTING).
 - The help log writes `fresh_copy: N` only after a reset, instead of an `attempt: 0` that read like a test-run count. Older `attempt:` entries still work.
 
 ## 0.6.0

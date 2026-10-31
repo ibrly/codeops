@@ -86,7 +86,18 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => p
   // /private/var on macOS, and with short (RUNNER~1) or escaped (C:\\Users) forms on Windows.
   const tempPath = new RegExp(`[^\\s'"()]*${path.basename(check.dir)}(?:\\\\\\\\|\\\\|/)`, "g");
   output = output.replace(tempPath, shown);
-  console.log(output.split("\n").slice(-40).join("\n"));
+  // For reading, drop Node's internal stack frames and TAP bookkeeping, so the learner's own
+  // lines and the error messages are what's left. (Passing is judged on the raw output above.)
+  const noise = [
+    /\(?node:(internal|async_hooks)/,
+    /^\s*(async )?(Test|AsyncResource|TestContext\.run|Suite)\.\S+ \(/,
+    /^\s*(duration_ms|failureType|code|type):/,
+    /^\s*(---|\.\.\.)$/,
+    /^# (suites|cancelled|skipped|todo|duration_ms)\b/,
+    /^TAP version/,
+  ];
+  const lines = output.split("\n").filter((line) => !(track.test[0] === "node" && noise.some((re) => re.test(line))));
+  console.log(lines.slice(-60).join("\n"));
   for (const name of check.shadowing) {
     console.log(`\nNOTE: ${name} in your folder has the same name as Python's test runner, so it was left out of the check. Rename it.`);
   }
