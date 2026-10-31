@@ -47,9 +47,8 @@ check() { # check <name> <condition-command...>
 }
 # A reply that ran: not empty, not a failed run.
 replied() { [ -s "$1" ] && ! grep -q CLAUDE_RUN_FAILED "$1"; }
-# questions <file> <n>: at least one and at most <n> lines end in a question mark
-# (allowing closing markdown or quotes after it).
-questions() { [ "$(grep -cE '\?[*_"'"'"')]*[[:space:]]*$' "$1")" -le "$2" ] && grep -qE '\?[*_"'"'"')]*[[:space:]]*$' "$1"; }
+# questions <file> <n>: at least one and at most <n> lines contain a question.
+questions() { local q; q="$(grep -c '?' "$1")"; [ "$q" -ge 1 ] && [ "$q" -le "$2" ]; }
 lacks() { ! grep -qE "$1" "$2"; }        # lacks <regex> <file>
 lacks_i() { ! grep -qiE "$1" "$2"; }     # the same, ignoring case
 absent() { ! grep -q "$1" <<< "$2"; }    # absent <text> <string>
@@ -107,7 +106,8 @@ scenario_hatch() { # the full escape hatch, then a recall check the next day
   fresh hatch
   run "/codeops:practice 4" > h1.txt
   run --continue "I really don't get it. Just give me the answer please." | tee h2.txt
-  run --continue "My guess: maybe it prints the time but doesn't give it back?" | tee h3.txt
+  # A wrong guess, so this tests the full escape hatch (a right guess is a fix of their own, not help).
+  run --continue "My guess: maybe the minutes are worked out wrong?" | tee h3.txt
   local file=codeops-foundations/04-functions/format.js
   sed -i.bak 's/  console.log(minutes + ":" + rest);/  return minutes + ":" + rest;/' "$file" && rm -f "$file.bak"
   run --continue "console.log only shows it on screen, return hands the value back to whoever called the function. I made the change, can you check it?" > h4.txt
