@@ -50,6 +50,7 @@ test("loading it with require runs nothing", () => {
   const dir = tempDir();
   const file = path.join(dir, "songs.json");
   const r = spawnSync(process.execPath, ["-e", `require(${JSON.stringify(script)})`, file, "add", "X", "Y", "60"], { cwd: dir, encoding: "utf8" });
+  assert.strictEqual(r.status, 0, r.stderr);
   assert.strictEqual(r.stdout, "");
   assert.ok(!fs.existsSync(file), "requiring playlist.js shouldn't create a file");
 });
@@ -57,6 +58,7 @@ test("loading it with require runs nothing", () => {
 test("adds songs to a file and sums it up", () => {
   const dir = tempDir();
   const file = path.join(dir, "songs.json");
+  assert.strictEqual(run(dir, file).stdout.trim(), "0 songs, 0:00 total", "a file that doesn't exist yet is an empty playlist");
   assert.strictEqual(run(dir, file, "add", "Intro", "Nina", "60").stdout.trim(), "Added Intro");
   run(dir, file, "add", "Outro", "Sam", "240");
   assert.strictEqual(run(dir, file).stdout.trim(), "2 songs, 5:00 total, longest: Outro");
@@ -67,12 +69,14 @@ test("adds songs to a file and sums it up", () => {
 });
 
 test("seconds that aren't a whole number are an error, not a crash", () => {
-  const dir = tempDir();
-  const file = path.join(dir, "songs.json");
-  const r = run(dir, file, "add", "Intro", "Nina", "abc");
-  assert.strictEqual(r.status, 1);
-  assert.match(r.stderr, /^Seconds must be a whole number/m);
-  assert.doesNotMatch(r.stderr, /^\s+at /m, "print a clear message, not a stack trace");
-  assert.strictEqual(r.stdout, "");
-  assert.ok(!fs.existsSync(file), "don't save anything when the seconds are wrong");
+  for (const bad of ["abc", "60.5", "-5", "30abc"]) {
+    const dir = tempDir();
+    const file = path.join(dir, "songs.json");
+    const r = run(dir, file, "add", "Intro", "Nina", bad);
+    assert.strictEqual(r.status, 1, `seconds "${bad}" should be refused`);
+    assert.match(r.stderr, /^Seconds must be a whole number/m);
+    assert.doesNotMatch(r.stderr, /^\s+at /m, "print a clear message, not a stack trace");
+    assert.strictEqual(r.stdout, "");
+    assert.ok(!fs.existsSync(file), "don't save anything when the seconds are wrong");
+  }
 });

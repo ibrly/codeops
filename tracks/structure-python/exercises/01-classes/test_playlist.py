@@ -8,6 +8,7 @@ INTRO = {"title": "Intro", "artist": "Nina", "seconds": 60}
 class TestPlaylist(unittest.TestCase):
     def test_a_playlist_keeps_its_name(self):
         self.assertEqual(Playlist("Morning Run").name, "Morning Run")
+        self.assertEqual(Playlist("Evening Walk").name, "Evening Walk")
 
     def test_a_new_playlist_has_no_songs(self):
         self.assertEqual(Playlist("Morning Run").songs, [])

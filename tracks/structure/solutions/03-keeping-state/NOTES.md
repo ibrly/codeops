@@ -4,3 +4,4 @@
 **Good hint (rung 3):** "Print `this.position` at the start of each `next()`. Does it ever change?"
 **New in this exercise:** updating an attribute (`this.position = ...`) inside a method.
 **Rejected (see `wrong/`):** `this.position += 1` stores the move but never wraps, so after the last song `next()` gives back `undefined`.
+**Rejected (see `wrong/rotate-the-list/`):** rotating `this.songs` changes the caller's list and never uses `position`.

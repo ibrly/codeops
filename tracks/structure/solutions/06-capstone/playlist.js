@@ -45,7 +45,7 @@ if (require.main === module) {
   const [file, command, title, artist, seconds] = process.argv.slice(2);
   const playlist = load(file);
   if (command === "add") {
-    if (seconds === undefined || seconds === "" || !Number.isInteger(Number(seconds))) {
+    if (!/^\d+$/.test(seconds ?? "")) {
       console.error("Seconds must be a whole number");
       process.exit(1);
     }

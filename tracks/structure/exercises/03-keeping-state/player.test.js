@@ -22,6 +22,14 @@ test("remembers where it is", () => {
   assert.deepStrictEqual(player.current(), MIDDLE);
 });
 
+test("works with any number of songs, and leaves the list alone", () => {
+  const songs = [INTRO, MIDDLE];
+  const player = new Player(songs);
+  player.next();
+  assert.deepStrictEqual(songs, [INTRO, MIDDLE]);
+  assert.deepStrictEqual(player.next(), INTRO);
+});
+
 test("goes back to the first song after the last", () => {
   const player = new Player([INTRO, MIDDLE, OUTRO]);
   player.next();

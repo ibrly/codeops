@@ -15,7 +15,7 @@ It also works as a program. The playlist is saved in a file as a JSON list of so
 node playlist.js songs.json add Intro Nina 60
 ```
 
-adds the song to the file (with `seconds` saved as a number) and prints `Added Intro`. Running `node playlist.js songs.json` prints the summary. If the seconds aren't a whole number, print `Seconds must be a whole number` with `console.error`, exit with code 1, and leave the file alone. Just loading the file with `require` must not run the program.
+adds the song to the file (with `seconds` saved as a number) and prints `Added Intro`. Running `node playlist.js songs.json` prints the summary. If the seconds aren't a whole number (digits only: `60.5`, `-5`, and `30abc` are all refused), print `Seconds must be a whole number` with `console.error`, exit with code 1 (`process.exit(1)`), and leave the file alone. Just loading the file with `require` must not run the program: put the program part inside `if (require.main === module) { ... }`, which is true only when the file is run directly with `node`.
 
 **Run the test** (it runs your program for you):
 

@@ -21,7 +21,7 @@ adds that song, with its seconds as a number, saves the file, and prints `Added 
 python3 playlist.py songs.json
 ```
 
-prints the playlist's `summary()`. If the seconds aren't a whole number, print `Seconds must be a whole number` to the error output, with `print(..., file=sys.stderr)`, exit with code 1 (`sys.exit(1)`), and leave the file as it was.
+prints the playlist's `summary()`. If the seconds aren't a whole number (digits only: `60.5`, `-5`, and `30abc` are all refused), print `Seconds must be a whole number` to the error output, with `print(..., file=sys.stderr)`, exit with code 1 (`sys.exit(1)`), and leave the file as it was.
 
 **Run the test** (it runs your program for you):
 

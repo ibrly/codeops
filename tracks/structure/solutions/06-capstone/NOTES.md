@@ -4,3 +4,4 @@
 **Rejected (see `wrong/`):** storing the seconds argument without converting it saves `"60"` instead of `60`.
 **Not tested:** unknown commands, a corrupt JSON file. If the learner asks, they're good conversations about what the program should do.
 **Uses:** child_process (the test runs playlist.js as a program).
+**Rejected (see `wrong/parse-int/`):** `parseInt(seconds)` with an `isNaN` check accepts `60.5` and `30abc` and saves `60` and `30`.

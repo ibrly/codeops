@@ -48,7 +48,7 @@ if __name__ == "__main__":
     playlist = load(path)
     if len(sys.argv) > 2 and sys.argv[2] == "add":
         title, artist, seconds = sys.argv[3:6]
-        if not seconds.isdigit():
+        if not (seconds.isascii() and seconds.isdecimal()):
             print("Seconds must be a whole number", file=sys.stderr)
             sys.exit(1)
         playlist.add({"title": title, "artist": artist, "seconds": int(seconds)})

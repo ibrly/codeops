@@ -4,3 +4,4 @@
 **Rejected (see `wrong/`):** `self.position += 1` without wrapping runs off the end of the list: the fourth call raises `IndexError`.
 **Good hint (rung 3):** "Print `self.position` at the start of each `next()`. Does it ever change?"
 **New in this exercise:** updating an attribute inside a method.
+**Rejected (see `wrong/rotate-the-list/`):** rotating `self.songs` changes the caller's list and never uses `position`.

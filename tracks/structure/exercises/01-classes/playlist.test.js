@@ -6,6 +6,7 @@ const INTRO = { title: "Intro", artist: "Nina", seconds: 60 };
 
 test("a new playlist has its name", () => {
   assert.strictEqual(new Playlist("Morning Run").name, "Morning Run");
+  assert.strictEqual(new Playlist("Evening Walk").name, "Evening Walk");
 });
 
 test("a new playlist starts with no songs", () => {

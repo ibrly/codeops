@@ -21,6 +21,13 @@ class TestPlayer(unittest.TestCase):
         player.next()
         self.assertEqual(player.current(), MIDDLE)
 
+    def test_works_with_any_number_of_songs_and_leaves_the_list_alone(self):
+        songs = [INTRO, MIDDLE]
+        player = Player(songs)
+        player.next()
+        self.assertEqual(songs, [INTRO, MIDDLE])
+        self.assertEqual(player.next(), INTRO)
+
     def test_goes_back_to_the_first_song_after_the_last(self):
         player = Player([INTRO, MIDDLE, OUTRO])
         player.next()

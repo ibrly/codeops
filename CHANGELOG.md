@@ -2,6 +2,13 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Fixed
+
+- **Module 4 test holes found by an audit**, closed in both languages: the capstone accepted decimal, negative, or partly numeric seconds (`60.5`, `-5`, `30abc`) and truncated them, JavaScript and Python disagreed on negative seconds, and summarizing a file that doesn't exist yet wasn't tested; 03-keeping-state passed if the fix rotated the caller's list or assumed three songs; 01-classes passed with a hard-coded name. The new wrong fixes are kept as `wrong/` fixtures.
+- The JavaScript capstone README explains `require.main === module` and `process.exit(1)`, and both capstone READMEs say what counts as a whole number.
+
 ## 0.11.0
 
 Smoke-tested: 71/71 checks in 16 scenarios, 1m 39s, $9.11, Claude Code 2.1.314, 2026-10-31.

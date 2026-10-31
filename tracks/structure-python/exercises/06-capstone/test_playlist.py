@@ -40,6 +40,7 @@ class TestPlaylistClass(unittest.TestCase):
 
     def test_an_empty_playlist(self):
         p = Playlist()
+        self.assertEqual(p.songs, [])
         self.assertIsNone(p.longest())
         self.assertEqual(p.summary(), "0 songs, 0:00 total")
 
@@ -65,6 +66,7 @@ class TestPlaylistProgram(unittest.TestCase):
 
     def test_adds_songs_saves_them_and_summarizes(self):
         path = temp_file()
+        self.assertEqual(run(path).stdout.strip(), "0 songs, 0:00 total", "a file that doesn't exist yet is an empty playlist")
         added = run(path, "add", "Intro", "Nina", "60")
         self.assertEqual(added.returncode, 0, added.stderr)
         self.assertEqual(added.stdout.strip(), "Added Intro")
@@ -79,13 +81,15 @@ class TestPlaylistProgram(unittest.TestCase):
             ])
 
     def test_seconds_that_arent_a_whole_number_are_an_error_not_a_crash(self):
-        path = temp_file()
-        result = run(path, "add", "Intro", "Nina", "abc")
-        self.assertEqual(result.returncode, 1)
-        self.assertRegex(result.stderr, r"(?m)^Seconds must be a whole number")
-        self.assertNotIn("Traceback", result.stderr)
-        self.assertEqual(result.stdout, "")
-        self.assertFalse(os.path.exists(path))
+        for bad in ("abc", "60.5", "-5", "30abc"):
+            with self.subTest(seconds=bad):
+                path = temp_file()
+                result = run(path, "add", "Intro", "Nina", bad)
+                self.assertEqual(result.returncode, 1, f'seconds "{bad}" should be refused')
+                self.assertRegex(result.stderr, r"(?m)^Seconds must be a whole number")
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertEqual(result.stdout, "")
+                self.assertFalse(os.path.exists(path))
 
 
 if __name__ == "__main__":
