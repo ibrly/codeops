@@ -2,7 +2,7 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
-## Unreleased
+## 0.6.0
 
 ### Fixed
 
