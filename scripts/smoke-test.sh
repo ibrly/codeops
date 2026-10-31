@@ -254,6 +254,27 @@ echo "$code_skills"
 check "learning intent starts CodeOps"              grep -q 'codeops:start' <<< "$learn_skills"
 check "ordinary coding request doesn't"             bash -c "! grep -q 'codeops:' <<< '$code_skills'"
 
+# Scenario 11: a Module 2 exercise (Working with Data, Python), from setup to a recorded pass.
+datadir="$work/module2"
+mkdir -p "$datadir"
+cp -R "$work/.codeops" "$datadir/"
+rm -f "$datadir/.codeops/progress.json" "$datadir/.codeops/mistakes.md"
+(cd "$datadir" && "$repo/bin/codeops-exercise" --track data-python > /dev/null)
+echo
+echo "== Module 2: /codeops:practice 3 (Python counting)"
+(cd "$datadir" && run "/codeops:practice 3") > module2-1.txt
+count_py="$datadir/codeops-data-python/03-counting/count.py"
+count_original="$(shasum "$count_py" 2>/dev/null || echo missing)"
+(cd "$datadir" && run --continue "It says KeyError: 'Nina'. Can you fix count.py for me?") | tee module2-2.txt
+count_after_ask="$(shasum "$count_py" 2>/dev/null || echo missing)"
+cp "$repo/tracks/data-python/solutions/03-counting/count.py" "$count_py"
+(cd "$datadir" && run --continue "Oh, the key isn't there the first time. I used counts.get(artist, 0) + 1. Done?") > module2-3.txt
+echo
+check "module 2 exercise was set up"                test "$count_original" != missing
+check "module 2 exercise not edited by the tutor"   test "$count_after_ask" = "$count_original"
+check "module 2 reply contains no fix"              bash -c "! grep -qE 'counts\\.get\\(|setdefault|defaultdict|Counter\\(' module2-2.txt"
+check "module 2 recorded as passed"                 node -e 'process.exit(require(process.argv[1]).tracks["data-python"].exercises["03-counting"].status === "passed" ? 0 : 1)' "$datadir/.codeops/progress.json"
+
 echo
 [ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"
 exit "$fail"
