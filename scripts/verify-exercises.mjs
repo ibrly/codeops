@@ -62,13 +62,15 @@ for (const name of readdirSync(t.tracksDir)) {
     cpSync(join(track.exercises, id), work, { recursive: true });
 
     const problems = [];
+    const expected = t.expectedTests(join(track.exercises, id));
     const shipped = await t.runTests(track, work);
     if (shipped.missing) problems.push(shipped.output);
-    else if (shipped.status === 0) problems.push("tests pass on the shipped code (nothing to fix)");
+    else if (t.runPassed(track, shipped, expected)) problems.push("tests pass on the shipped code (nothing to fix)");
+    if (!expected) problems.push("no test cases found in the shipped test files");
     if (!existsSync(solution)) problems.push("no solution folder");
     else if (!shipped.missing) {
       cpSync(solution, work, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") });
-      if ((await t.runTests(track, work)).status !== 0) problems.push("tests fail on the reference solution");
+      if (!t.runPassed(track, await t.runTests(track, work), expected)) problems.push("tests fail on the reference solution");
     }
     rmSync(work, { recursive: true, force: true });
 

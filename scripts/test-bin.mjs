@@ -467,3 +467,52 @@ test("the list says what comes after the capstone", () => {
   writeFileSync(join(cwd, ".codeops", "progress.json"), JSON.stringify(p));
   assert.match(run(cwd, "codeops-exercise", "--list").out, /Track complete\./);
 });
+
+test("exiting early can't fake a pass", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  writeFileSync(join(cwd, "codeops-foundations", "03-loops", "total.js"), "process.exit(0);\n");
+  const r = run(cwd, "codeops-check", "3");
+  assert.match(r.out, /03-loops failing/);
+  assert.match(r.out, /doesn't count as passed/);
+
+  const py = learner();
+  run(py, "codeops-exercise", "--track", "foundations-python");
+  run(py, "codeops-exercise", "3");
+  writeFileSync(join(py, "codeops-foundations-python", "03-loops", "total.py"), "import os\nos._exit(0)\n");
+  assert.match(run(py, "codeops-check", "3").out, /03-loops failing/);
+});
+
+test("a learner file named unittest.py can't replace the test runner", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "--track", "foundations-python");
+  run(cwd, "codeops-exercise", "3");
+  writeFileSync(join(cwd, "codeops-foundations-python", "03-loops", "unittest.py"), "");
+  const r = run(cwd, "codeops-check", "3");
+  assert.match(r.out, /03-loops failing/);
+  assert.match(r.out, /unittest\.py in your folder has the same name/);
+});
+
+test("a track name can't point outside the tracks folder", () => {
+  const cwd = learner();
+  for (const name of ["../../etc", "foundations/../foundations", "Foundations", "foundations/"]) {
+    const r = run(cwd, "codeops-exercise", "--track", name);
+    assert.strictEqual(r.status, 1, name);
+  }
+  mkdirSync(join(cwd, ".codeops"), { recursive: true });
+  writeFileSync(join(cwd, ".codeops", "progress.json"), JSON.stringify({ track: "../../tracks/foundations", tracks: {} }));
+  assert.strictEqual(run(cwd, "codeops-exercise", "1").status, 1);
+});
+
+test("a test that prints endlessly is stopped, not a crash", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "--track", "foundations-python");
+  run(cwd, "codeops-exercise", "3");
+  writeFileSync(
+    join(cwd, "codeops-foundations-python", "03-loops", "total.py"),
+    'import sys\ndef total_duration(songs):\n    while True:\n        sys.stdout.write("x" * 100000)\n',
+  );
+  const { NODE_TEST_CONTEXT, ...env } = process.env;
+  const r = spawnSync(process.execPath, [bin("codeops-check"), "3"], { cwd, encoding: "utf8", env: { ...env, CODEOPS_TEST_TIMEOUT_MS: "2000" } });
+  assert.match(r.stdout, /RESULT: foundations-python\/03-loops failing \(timed out\)/);
+});

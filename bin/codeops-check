@@ -40,8 +40,11 @@ function helpUsed(attempt) {
 
 const check = t.prepareCheck(track, id, dir);
 // Remove the temp copy however the script ends, including Ctrl-C.
-process.on("exit", check.cleanup);
-for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => process.exit(130));
+process.on("exit", () => {
+  t.killRunning();
+  check.cleanup();
+});
+for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => process.exit(130));
 
 (async () => {
   const run = await t.runTests(track, check.dir);
@@ -54,7 +57,7 @@ for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => process.exi
   entry.attempts += 1;
 
   let result;
-  if (run.status === 0) {
+  if (t.runPassed(track, run, check.expected)) {
     result = helpUsed(entry.resets || 0) ? "assisted" : "passed";
     if (entry.status === "assisted" && result === "passed") entry.redone = true;
     if (entry.status !== "passed") entry.status = result;
@@ -73,6 +76,12 @@ for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => process.exi
   const tempPath = new RegExp(`[^\\s'"()]*${path.basename(check.dir)}(?:\\\\\\\\|\\\\|/)`, "g");
   output = output.replace(tempPath, shown);
   console.log(output.split("\n").slice(-40).join("\n"));
+  for (const name of check.shadowing) {
+    console.log(`\nNOTE: ${name} in your folder has the same name as Python's test runner, so it was left out of the check. Rename it.`);
+  }
+  if (run.status === 0 && !t.runPassed(track, run, check.expected)) {
+    console.log(`\nNOTE: the run exited without the expected ${check.expected} test(s) all passing (maybe the code stops the program early), so it doesn't count as passed.`);
+  }
   for (const name of check.changed) {
     console.log(`\nNOTE: your copy of ${name} differs from the original, so this was checked against the original test.`);
   }

@@ -21,6 +21,8 @@ def run_learner_test_with(search_source):
         with open(os.path.join(tmp, "search.py"), "w") as f:
             f.write(search_source)
         env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+        # The temp folder holds only the learner's test and search.py, so let it import from there.
+        env.pop("PYTHONSAFEPATH", None)
         result = subprocess.run(
             [sys.executable, "-m", "unittest", "test_mine"],
             cwd=tmp, env=env, capture_output=True, text=True,
