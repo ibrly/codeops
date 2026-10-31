@@ -20,7 +20,8 @@ if (["--help", "-h"].includes(arg)) {
   codeops-exercise --tracks          show every track you can switch to
   codeops-exercise --track <name>    switch track, e.g. --track foundations-python
   codeops-exercise --reset <exercise>   start an exercise again (your old copy is backed up)
-  codeops-exercise --taught <exercise>  record that you taught this concept back`);
+  codeops-exercise --taught <exercise>  record that you taught this concept back
+  codeops-exercise --report          a summary to share as feedback, with nothing personal in it`);
   process.exit(0);
 }
 for (const flag of ["--track", "--reset", "--taught"]) {
@@ -30,6 +31,31 @@ for (const flag of ["--track", "--reset", "--taught"]) {
   }
 }
 const progress = t.readProgress(cwd);
+
+if (arg === "--report") {
+  // A shareable summary for pilot feedback: statuses and help counts only. It never includes
+  // notes.md, the learner's guesses, their code, or file paths.
+  const version = JSON.parse(fs.readFileSync(path.join(__dirname, "..", ".claude-plugin", "plugin.json"), "utf8")).version;
+  console.log(`CodeOps ${version} · Node ${process.versions.node} · ${process.platform}`);
+  for (const name of t.listTracks()) {
+    const done = progress.tracks[name]?.exercises ?? {};
+    for (const [id, e] of Object.entries(done).sort()) {
+      console.log(`${name}/${id}: ${e.status}, ${e.attempts || 0} test run(s)${e.resets ? `, ${e.resets} reset(s)` : ""}${e.taught ? ", taught" : ""}`);
+    }
+  }
+  let log = "";
+  try {
+    log = fs.readFileSync(path.join(cwd, ".codeops", "mistakes.md"), "utf8");
+  } catch {}
+  const entries = log.split(/^- /m).filter((e) => /concept:/.test(e));
+  const field = (e, k) => new RegExp(`^\\s*-?\\s*${k}:\\s*(.+)$`, "m").exec(e)?.[1].trim();
+  console.log(entries.length ? `\nHelp logged (${entries.length}):` : "\nNo help logged.");
+  for (const e of entries) {
+    const where = field(e, "exercise") ?? (field(e, "file") ? "own project" : "");
+    console.log(`- ${field(e, "date") ?? "?"} · ${field(e, "how") ?? "?"} · ${field(e, "concept") ?? "?"}${where ? ` · ${where}` : ""}${field(e, "retired") ? " · retired" : ""}`);
+  }
+  process.exit(0);
+}
 
 if (arg === "--tracks") {
   // Every track, with honest counts for the ones the learner has started.

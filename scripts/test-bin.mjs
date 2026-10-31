@@ -695,3 +695,19 @@ test("the home-folder rule holds when the home path's letter case differs", () =
   const r = spawnSync(process.execPath, [bin("codeops-exercise"), "--list"], { cwd: project, encoding: "utf8", env: { ...env, HOME: lower, USERPROFILE: lower } });
   assert.match(r.stdout, /^Track: foundations/m, "the home folder's .codeops must not capture a folder below it");
 });
+
+test("--report shares progress and help without anything personal", () => {
+  const cwd = learner();
+  assert.match(run(cwd, "codeops-exercise", "--report").out, /No help logged/);
+  run(cwd, "codeops-exercise", "3");
+  writeFileSync(join(cwd, ".codeops", "notes.md"), "## Goal\nA secret startup idea\n");
+  run(cwd, "codeops-recall", "add", "--concept", "loops", "--how", "escape hatch", "--exercise", "3", "--guess", "my private guess");
+  run(cwd, "codeops-recall", "add", "--concept", "naming", "--how", "hint", "--file", join(cwd, "secret-project", "app.js"));
+  const out = run(cwd, "codeops-exercise", "--report").out;
+  assert.match(out, /^CodeOps \d+\.\d+\.\d+ · Node /m);
+  assert.match(out, /foundations\/03-loops: in_progress, 0 test run\(s\)/);
+  assert.match(out, /escape hatch · loops · foundations\/03-loops/);
+  assert.match(out, /hint · naming · own project/);
+  assert.doesNotMatch(out, /secret|private guess|guess:/);
+  assert.ok(!out.includes(cwd), "no file paths");
+});
