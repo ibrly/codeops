@@ -11,6 +11,12 @@ test("keeps every good line and counts the bad one", () => {
   assert.strictEqual(result.skipped, 1);
 });
 
+test("a line with a comma can still be bad", () => {
+  const result = loadSongs(["Intro,60", "Oops,abc", "Outro,30"]);
+  assert.strictEqual(result.songs.length, 2);
+  assert.strictEqual(result.skipped, 1);
+});
+
 test("counts every bad line", () => {
   assert.strictEqual(loadSongs(["bad", "worse", "Ok,10"]).skipped, 2);
 });

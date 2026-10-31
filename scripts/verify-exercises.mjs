@@ -69,10 +69,21 @@ for (const name of readdirSync(t.tracksDir)) {
     if (!expected) problems.push("no test cases found in the shipped test files");
     if (!existsSync(solution)) problems.push("no solution folder");
     else if (!shipped.missing) {
-      cpSync(solution, work, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") });
+      cpSync(solution, work, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") && !src.includes(`${join(solution, "wrong")}`) });
       if (!t.runPassed(track, await t.runTests(track, work), expected)) problems.push("tests fail on the reference solution");
     }
     rmSync(work, { recursive: true, force: true });
+
+    // solutions/<id>/wrong/<name>/ holds plausible fixes that break the spec. Each must FAIL the tests,
+    // so a test that's too loose to catch it is caught here instead of by a learner.
+    const wrongDir = join(solution, "wrong");
+    for (const name of existsSync(wrongDir) ? readdirSync(wrongDir) : []) {
+      const attempt = mkdtempSync(join(tmpdir(), "codeops-verify-"));
+      cpSync(join(track.exercises, id), attempt, { recursive: true });
+      cpSync(join(wrongDir, name), attempt, { recursive: true });
+      if (t.runPassed(track, await t.runTests(track, attempt), expected)) problems.push(`wrong fix "${name}" passes the tests`);
+      rmSync(attempt, { recursive: true, force: true });
+    }
 
     checked++;
     if (problems.length) fail(`${name}/${id}`, problems);

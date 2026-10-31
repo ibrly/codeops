@@ -14,6 +14,11 @@ class TestMergePlaylists(unittest.TestCase):
     def test_a_song_in_both_playlists_appears_once(self):
         self.assertEqual(merge_playlists([BLUE, RED], [{"title": "Red", "artist": "Sam"}, GOLD]), [BLUE, RED, GOLD])
 
+    def test_same_title_and_artist_is_a_duplicate_even_if_other_details_differ(self):
+        blue_live = {"title": "Blue", "artist": "Nina", "seconds": 260}
+        blue_studio = {"title": "Blue", "artist": "Nina", "seconds": 240}
+        self.assertEqual(merge_playlists([blue_live], [blue_studio]), [blue_live])
+
     def test_same_title_by_a_different_artist_is_a_different_song(self):
         cover = {"title": "Blue", "artist": "Sam"}
         self.assertEqual(merge_playlists([BLUE], [cover]), [BLUE, cover])

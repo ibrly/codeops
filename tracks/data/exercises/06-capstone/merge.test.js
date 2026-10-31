@@ -14,6 +14,12 @@ test("a song in both playlists appears once", () => {
   assert.deepStrictEqual(mergePlaylists([blue, red], [{ title: "Red", artist: "Sam" }, gold]), [blue, red, gold]);
 });
 
+test("same title and artist is a duplicate, even if other details differ", () => {
+  const blueLive = { title: "Blue", artist: "Nina", seconds: 260 };
+  const blueStudio = { artist: "Nina", title: "Blue", seconds: 240 };
+  assert.deepStrictEqual(mergePlaylists([blueLive], [blueStudio]), [blueLive]);
+});
+
 test("same title by a different artist is a different song", () => {
   const coverVersion = { title: "Blue", artist: "Sam" };
   assert.deepStrictEqual(mergePlaylists([blue], [coverVersion]), [blue, coverVersion]);

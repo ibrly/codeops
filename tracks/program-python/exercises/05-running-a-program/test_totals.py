@@ -27,6 +27,17 @@ class TestTotals(unittest.TestCase):
         self.assertEqual(out.getvalue(), "")
         self.assertEqual(totals.total_seconds(saved([{"seconds": 60}, {"seconds": 30}])), 90)
 
+    def test_importing_from_another_program_prints_nothing(self):
+        # Even when that program was given a file argument of its own.
+        env = dict(os.environ)
+        env.pop("PYTHONSAFEPATH", None)
+        result = subprocess.run(
+            [sys.executable, "-c", "import totals", saved([{"seconds": 60}])],
+            cwd=HERE, env=env, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
+
     def test_running_it_prints_the_total(self):
         result = subprocess.run(
             [sys.executable, os.path.join(HERE, "totals.py"), saved([{"seconds": 60}, {"seconds": 30}])],

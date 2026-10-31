@@ -33,5 +33,6 @@ test("a missing file is an error, not a crash", () => {
   const r = runWith(null);
   assert.strictEqual(r.status, 1);
   assert.match(r.stderr, /^Can't read .*songs\.txt/m);
+  assert.doesNotMatch(r.stderr, /^\s+at /m, "print a clear message, not a stack trace");
   assert.strictEqual(r.stdout, "");
 });

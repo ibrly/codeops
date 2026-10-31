@@ -9,6 +9,11 @@ class TestLoadSongs(unittest.TestCase):
         self.assertEqual(result["songs"], [{"title": "Intro", "seconds": 60}, {"title": "Outro", "seconds": 30}])
         self.assertEqual(result["skipped"], 1)
 
+    def test_a_line_with_a_comma_can_still_be_bad(self):
+        result = load_songs(["Intro,60", "Oops,abc", "Outro,30"])
+        self.assertEqual(len(result["songs"]), 2)
+        self.assertEqual(result["skipped"], 1)
+
     def test_counts_every_bad_line(self):
         self.assertEqual(load_songs(["bad", "worse", "Ok,10"])["skipped"], 2)
 
