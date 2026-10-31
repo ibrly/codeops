@@ -2,3 +2,4 @@
 **Lesson:** an async function returns a Promise; `await` it to get the value.
 **Accepted fixes:** `const songs = await loadPlaylist(path)`, or `.then(...)`.
 **Good hint (rung 3):** "Add `console.log(songs)` before the reduce. What does it print?"
+**Uses:** child_process (the test runs total.js as a program).

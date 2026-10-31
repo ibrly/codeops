@@ -3,3 +3,4 @@
 **Accepted fixes:** the `__main__` guard, optionally around a `main()` function.
 **Rejected (see `wrong/`):** `if len(sys.argv) > 1:` instead of the guard. Importing from another program that has its own arguments still runs it.
 **Good hint (rung 3):** "When the test does `import totals`, which lines of `totals.py` run?"
+**Uses:** subprocess (the test runs totals.py as a program).

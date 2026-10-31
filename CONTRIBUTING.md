@@ -30,6 +30,18 @@ Thanks for wanting to help! CodeOps is a project about learning, so first-time c
 
 Stuck on any step? Open a draft PR or an issue and ask. Questions are contributions too.
 
+## Exercise review checklist
+
+Exercise tests run on learners' own computers, so every new or changed exercise is reviewed against this list. Contributors: check it yourself before opening the pull request.
+
+- [ ] Standard library only: no packages to install.
+- [ ] No network access. Starting processes or using `child_process`/`subprocess` only when the exercise needs it, justified in `NOTES.md` with a `**Uses:**` line (`verify-exercises` enforces this).
+- [ ] Tests write only to a temp folder, never to the learner's folder or home.
+- [ ] One concept per exercise, and the README doesn't describe the bug.
+- [ ] `NOTES.md` has the planted bug, accepted fixes, a rung-3 hint, and a `New in this exercise:` line.
+- [ ] At least one `solutions/<id>/wrong/` fixture: a plausible fix that must fail (`verify-exercises` enforces this for new exercises).
+- [ ] Someone tried it once as a learner with `/codeops:practice`.
+
 ## Ground rules
 
 - **Nothing unbuilt in the repo.** No placeholder files, empty tracks, or "coming soon" stubs. If it isn't working, it lives in an issue, not a directory.

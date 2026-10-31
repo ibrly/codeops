@@ -17,6 +17,11 @@ const fail = (where, problems) => {
   console.error(`FAIL  ${where}: ${problems.join("; ")}`);
 };
 
+const backlogFile = join(root, "scripts", "wrong-fixture-backlog.txt");
+const backlog = new Set(
+  (existsSync(backlogFile) ? readFileSync(backlogFile, "utf8") : "").split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#")),
+);
+
 // Structural rules every track must follow, so contributor mistakes fail CI with a clear message.
 function lint(track) {
   const problems = [];
@@ -38,6 +43,38 @@ function lint(track) {
     if (!readdirSync(dir).some(t.isTestFile)) problems.push(`${id}: no test file`);
     if (!existsSync(join(track.dir, "solutions", id, "NOTES.md"))) problems.push(`${id}: no solutions/${id}/NOTES.md`);
   });
+  // Tests run on learners' machines: anything that reaches the network or starts processes must be
+  // declared and justified in NOTES.md with a "Uses:" line naming the module.
+  const risky = [
+    [/require\(["'](?:node:)?(child_process|net|http|https|dgram|tls)["']\)/g, 1],
+    [/\b(fetch)\(/g, 1],
+    [/^\s*(?:import|from)\s+(socket|urllib|http|subprocess|requests)\b/gm, 1],
+  ];
+  for (const id of track.ids) {
+    const notesFile = join(track.dir, "solutions", id, "NOTES.md");
+    const notes = existsSync(notesFile) ? readFileSync(notesFile, "utf8") : "";
+    const uses = /^\*\*Uses:\*\*(.*)$/m.exec(notes)?.[1] ?? "";
+    for (const dir of [join(track.exercises, id), join(track.dir, "solutions", id)]) {
+      if (!existsSync(dir)) continue;
+      for (const file of readdirSync(dir, { recursive: true }).filter((f) => /\.(js|py)$/.test(f))) {
+        const text = readFileSync(join(dir, file), "utf8");
+        for (const [re, group] of risky) {
+          for (const m of text.matchAll(re)) {
+            if (!uses.includes(m[group])) problems.push(`${id}: ${file} uses ${m[group]}; justify it in NOTES.md with a "**Uses:**" line`);
+          }
+        }
+      }
+    }
+  }
+
+  // New exercises must ship at least one wrong/ fixture; older ones are listed in the backlog file.
+  for (const id of track.ids) {
+    const listed = backlog.has(`${track.name}/${id}`);
+    const hasWrong = existsSync(join(track.dir, "solutions", id, "wrong"));
+    if (!hasWrong && !listed) problems.push(`${id}: add at least one solutions/${id}/wrong/ fixture (a plausible fix that must fail)`);
+    if (hasWrong && listed) problems.push(`${id}: has wrong/ fixtures now, so remove it from scripts/wrong-fixture-backlog.txt`);
+  }
+
   const solutions = join(track.dir, "solutions");
   for (const id of existsSync(solutions) ? readdirSync(solutions) : []) {
     if (!track.ids.includes(id)) problems.push(`solutions/${id} has no matching exercise`);

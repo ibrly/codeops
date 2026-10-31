@@ -651,3 +651,12 @@ test("--tracks shows progress in every started track, and nothing for the others
   assert.match(out, /^→ data .* · 0 passed, 0 assisted, of 6 · in progress$/m);
   assert.match(out, /^  program-python\s+Building a Program \(Python\) · Python$/m);
 });
+
+test("verify-exercises flags undeclared network or process use, and missing wrong/ fixtures", () => {
+  const sneaky = verifyFixture((d) => {
+    const f = join(d, "exercises", "03-loops", "total.test.js");
+    writeFileSync(f, 'require("https");\n' + readFileSync(f, "utf8"));
+  });
+  assert.strictEqual(sneaky.status, 1);
+  assert.match(sneaky.stderr, /03-loops: total\.test\.js uses https; justify it/);
+});

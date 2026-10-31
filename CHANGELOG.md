@@ -8,6 +8,8 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 
 - **Progress across every track.** `codeops-exercise --tracks` shows passed, assisted, and complete for each track the learner has started, and `/codeops:progress` reports on all of them, so finishing Foundations and moving on doesn't hide it.
 
+- **Safe intake for contributed exercises.** A `CODEOWNERS` file, an exercise review checklist in CONTRIBUTING, and two new `verify-exercises` rules: network or process modules in exercise code must be justified in `NOTES.md` (`**Uses:**`), and new exercises must ship a `wrong/` fixture (older ones are listed in `scripts/wrong-fixture-backlog.txt`).
+
 ### Changed
 
 - **When the tutor is wrong.** The contract tells the tutor to re-check when a learner disputes it and to admit a mistake plainly, and never to change progress because of an argument. The README says how to keep or delete your data.
