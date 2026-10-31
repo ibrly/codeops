@@ -333,3 +333,19 @@ test("failure output points at the learner's files, not the temp copy", () => {
     assert.doesNotMatch(out, /\/(private|var|tmp)[^\s"']*codeops-/, `${track}: no leftover temp path prefix`);
   }
 });
+
+test("switching to the Python track checks Python is installed first", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "--list");
+  const empty = mkdtempSync(join(tmpdir(), "codeops-nopath-"));
+  test.after(() => rmSync(empty, { recursive: true, force: true }));
+  const { NODE_TEST_CONTEXT, ...env } = process.env;
+  const r = spawnSync(process.execPath, [bin("codeops-exercise"), "--track", "foundations-python"], {
+    cwd,
+    encoding: "utf8",
+    env: { ...env, PATH: empty, Path: empty },
+  });
+  assert.strictEqual(r.status, 1);
+  assert.match(r.stderr, /needs Python 3\.10 or later/);
+  assert.ok(!existsSync(join(cwd, ".codeops", "progress.json")) || progress(cwd).track !== "foundations-python");
+});

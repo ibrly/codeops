@@ -27,6 +27,11 @@ if (arg === "--track") {
     console.error(`No track "${value ?? ""}". Available: ${t.listTracks().join(", ")}`);
     process.exit(1);
   }
+  const problem = t.checkRuntime(t.loadTrack(value));
+  if (problem) {
+    console.error(problem + "\nThe track wasn't changed.");
+    process.exit(1);
+  }
   progress.track = value;
   t.trackExercises(progress, value);
   t.writeProgress(cwd, progress);
