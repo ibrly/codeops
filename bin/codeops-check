@@ -33,17 +33,13 @@ if (!id || !fs.existsSync(dir)) {
 // reset and an unaided redo can earn "passed". A redo on the same day as an earlier escape hatch
 // doesn't count, because the answer is still fresh.
 function helpUsed(attempt) {
-  let text = "";
-  try {
-    text = fs.readFileSync(path.join(cwd, ".codeops", "mistakes.md"), "utf8");
-  } catch {}
-  const prefix = track.name === t.defaultTrack ? `(?:${track.name}/)?` : `${track.name}/`;
-  const pattern = new RegExp(`exercise:\\s*${prefix}${id}\\b`);
-  const entries = text.split(/^- /m).filter((e) => pattern.test(e));
-  const attemptOf = (e) => Number(/(?:fresh_copy|attempt):\s*(\d+)/.exec(e)?.[1] ?? 0);
-  const counts = (e) => id === track.capstone || /how:\s*escape hatch/.test(e);
+  const names = [`${track.name}/${id}`, ...(track.name === t.defaultTrack ? [id] : [])];
+  const entries = t.logEntries(cwd).filter((e) => names.includes(e.exercise));
+  const attemptOf = (e) => Number(e.fresh_copy ?? e.attempt ?? 0) || 0;
+  const hatch = (e) => e.how === "escape hatch";
+  const counts = (e) => id === track.capstone || hatch(e);
   if (entries.some((e) => attemptOf(e) === attempt && counts(e))) return true;
-  return entries.some((e) => attemptOf(e) < attempt && /how:\s*escape hatch/.test(e) && e.includes(`date: ${t.localDate()}`));
+  return entries.some((e) => attemptOf(e) < attempt && hatch(e) && e.date === t.localDate());
 }
 
 const check = t.prepareCheck(track, id, dir);

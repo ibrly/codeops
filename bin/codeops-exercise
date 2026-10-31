@@ -53,18 +53,16 @@ if (arg === "--report") {
       console.log(`${name}/${id}: ${e.status}, ${e.attempts || 0} test run(s)${e.resets ? `, ${e.resets} reset(s)` : ""}${e.taught ? ", taught" : ""}`);
     }
   }
-  let log = "";
-  try {
-    log = fs.readFileSync(path.join(cwd, ".codeops", "mistakes.md"), "utf8");
-  } catch {}
-  const entries = log.split(/^- /m).filter((e) => /concept:/.test(e));
-  const field = (e, k) => new RegExp(`^\\s*-?\\s*${k}:\\s*(.+)$`, "m").exec(e)?.[1].trim();
+  const entries = t.logEntries(cwd);
+  const known = (value) => {
+    const [name, id] = String(value ?? "").split("/");
+    return Boolean(id) && Boolean(t.loadTrack(name)?.ids.includes(id));
+  };
   console.log(entries.length ? `\nHelp logged (${entries.length}):` : "\nNo help logged.");
   for (const e of entries) {
-    // Concepts logged on the learner's own project can describe their work, so they're left out.
-    const exercise = field(e, "exercise");
-    const concept = exercise ? field(e, "concept") ?? "?" : "own project";
-    console.log(`- ${field(e, "date") ?? "?"} · ${field(e, "how") ?? "?"} · ${concept}${exercise ? ` · ${exercise}` : ""}${field(e, "retired") ? " · retired" : ""}`);
+    // Only an exercise's concept is shown: anything else can describe the learner's own work.
+    const concept = known(e.exercise) ? `${e.concept ?? "?"} · ${e.exercise}` : "own project";
+    console.log(`- ${e.date ?? "?"} · ${e.how ?? "?"} · ${concept}${e.retired ? " · retired" : ""}`);
   }
   process.exit(0);
 }

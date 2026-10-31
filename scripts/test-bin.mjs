@@ -740,3 +740,35 @@ test("recall add --help and contract --help print usage", () => {
   const contract = spawnSync("sh", [bin("codeops-contract"), "--help"], { encoding: "utf8" });
   assert.match(contract.stdout, /^Usage/);
 });
+
+test("text inside a concept or guess can't hide an escape hatch", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  run(cwd, "codeops-recall", "add", "--concept", "retry loop stops after attempt: 2", "--how", "escape hatch", "--exercise", "3");
+  solve(cwd, "foundations", "03-loops");
+  assert.match(run(cwd, "codeops-check", "3").out, /03-loops assisted/);
+  run(cwd, "codeops-exercise", "4");
+  run(cwd, "codeops-recall", "add", "--concept", "return", "--how", "escape hatch", "--exercise", "4", "--guess", "I thought attempt: 1 would work");
+  solve(cwd, "foundations", "04-functions");
+  assert.match(run(cwd, "codeops-check", "4").out, /04-functions assisted/);
+});
+
+test("--report shows a concept only for a real exercise", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "--list");
+  mkdirSync(join(cwd, ".codeops"), { recursive: true });
+  writeFileSync(join(cwd, ".codeops", "mistakes.md"), "- concept: note about my employer Acme\n  exercise: n/a\n  how: hint\n  date: 2026-10-31\n");
+  assert.doesNotMatch(run(cwd, "codeops-exercise", "--report").out, /Acme/);
+});
+
+test("a coach help log in a project doesn't capture a learning folder inside it", () => {
+  const project = learner();
+  spawnSync("git", ["init", "-q"], { cwd: project });
+  run(project, "codeops-recall", "add", "--concept", "naming", "--how", "hint", "--file", "app.js");
+  const learning = join(project, "learning");
+  mkdirSync(learning);
+  assert.match(run(learning, "codeops-exercise", "--track", "foundations").out, new RegExp(`notes go in: .*learning`));
+  run(learning, "codeops-exercise", "1");
+  assert.ok(existsSync(join(learning, "codeops-foundations", "01-values-and-types")));
+  assert.ok(!existsSync(join(project, "codeops-foundations")), "nothing is created in the project");
+});
