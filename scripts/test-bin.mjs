@@ -2,7 +2,7 @@
 // Deterministic tests for the learner helper scripts in bin/. Runs in CI.
 import test from "node:test";
 import assert from "node:assert";
-import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, cpSync, existsSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, cpSync, existsSync, rmSync, readdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
@@ -253,4 +253,25 @@ test("a pass at the 30-day step retires the entry", () => {
   assert.doesNotMatch(log, /due:/);
   assert.match(run(cwd, "codeops-recall").out, /No recall checks due/);
   assert.strictEqual(run(cwd, "codeops-recall", "pass", "1").status, 1);
+});
+
+test("an infinite loop can't hang the check, and nothing is left behind", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  writeFileSync(join(cwd, "codeops-foundations", "03-loops", "total.js"), "module.exports = { totalDuration() { for (;;) {} } };\n");
+  const tmpBefore = readdirSync(tmpdir()).filter((d) => d.startsWith("codeops-check-")).length;
+  const started = Date.now();
+  const { NODE_TEST_CONTEXT, ...env } = process.env;
+  const r = spawnSync(process.execPath, [bin("codeops-check"), "3"], {
+    cwd,
+    encoding: "utf8",
+    env: { ...env, CODEOPS_TEST_TIMEOUT_MS: "1500" },
+  });
+  assert.ok(Date.now() - started < 15000, "the check must stop on its own");
+  assert.match(r.stdout, /RESULT: foundations\/03-loops failing \(timed out\)/);
+  assert.match(r.stdout, /looping forever/);
+  const tmpAfter = readdirSync(tmpdir()).filter((d) => d.startsWith("codeops-check-")).length;
+  assert.ok(tmpAfter <= tmpBefore, "the temp copy must be removed");
+  const leftover = spawnSync("pgrep", ["-f", "codeops-check-"], { encoding: "utf8" });
+  if (leftover.status !== null && process.platform !== "win32") assert.strictEqual(leftover.stdout.trim(), "", "no test process may outlive the check");
 });

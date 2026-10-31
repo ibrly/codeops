@@ -28,13 +28,13 @@ for (const name of readdirSync(join(root, "tracks"))) {
     cpSync(join(track.exercises, id), work, { recursive: true });
 
     const problems = [];
-    const shipped = t.runTests(track, work);
+    const shipped = await t.runTests(track, work);
     if (shipped.missing) problems.push(shipped.output);
     else if (shipped.status === 0) problems.push("tests pass on the shipped code (nothing to fix)");
     if (!existsSync(solution)) problems.push("no solution folder");
     else if (!shipped.missing) {
       cpSync(solution, work, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") });
-      if (t.runTests(track, work).status !== 0) problems.push("tests fail on the reference solution");
+      if ((await t.runTests(track, work)).status !== 0) problems.push("tests fail on the reference solution");
     }
     rmSync(work, { recursive: true, force: true });
 
