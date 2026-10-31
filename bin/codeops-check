@@ -62,7 +62,9 @@ for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => process.exi
   // Tests ran in a temp copy; point file paths in the output at the learner's own files instead.
   const shown = path.relative(cwd, dir) + path.sep;
   let output = run.output;
-  for (const temp of new Set([check.dir, fs.realpathSync(check.dir)])) output = output.split(temp + path.sep).join(shown);
+  // Longest first: on macOS the temp dir's real path (/private/var/...) contains its short form (/var/...).
+  const temps = [...new Set([fs.realpathSync(check.dir), check.dir])].sort((a, b) => b.length - a.length);
+  for (const temp of temps) output = output.split(temp + path.sep).join(shown);
   console.log(output.split("\n").slice(-40).join("\n"));
   for (const name of check.changed) {
     console.log(`\nNOTE: your copy of ${name} differs from the original, so this was checked against the original test.`);

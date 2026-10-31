@@ -329,5 +329,6 @@ test("failure output points at the learner's files, not the temp copy", () => {
     const expected = track === "foundations" ? "count.js" : "count.py";
     assert.match(out, new RegExp(`codeops-${track}[/\\\\]08-reading-errors[/\\\\]${expected.replace(".", "\\.")}`), track);
     assert.doesNotMatch(out, /codeops-check-/, track);
+    assert.doesNotMatch(out, /\/(private|var|tmp)[^\s"']*codeops-/, `${track}: no leftover temp path prefix`);
   }
 });
