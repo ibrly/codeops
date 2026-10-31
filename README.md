@@ -142,7 +142,7 @@ The third module, where the playlist code becomes a real program you run from th
 2. Command-line arguments
 3. Reading a file
 4. Saving data as JSON
-5. Waiting for slow work with `async`/`await` (JavaScript) or a file that's both a program and a module (Python)
+5. Waiting for slow work with `async`/`await`, run as a program (JavaScript), or a file that's both a program and a module (Python)
 6. **Capstone:** a complete `stats` command that reads a playlist file and prints a summary, with a clean error for a missing file
 
 ## Your data stays local

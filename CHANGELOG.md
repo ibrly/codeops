@@ -11,6 +11,7 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 
 ### Changed
 
+- JavaScript Building a Program exercise `05-running-a-program` is renamed `05-async-await`, matching what it teaches, and its test also runs the file as a program. (Progress recorded under the old name in 0.5.0 isn't carried over.)
 - The contract says skills may tighten its rules but never loosen them. The escape hatch logs before giving the answer, in one step. Practice asks one question per reply. Recall pacing is written down once.
 
 ## 0.5.0
