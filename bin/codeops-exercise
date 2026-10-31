@@ -164,8 +164,9 @@ if (arg === "--reset") {
     // so copy it to the backup and empty it instead.
     if (!["EBUSY", "EPERM", "EXDEV", "EACCES"].includes(err.code)) throw err;
     fs.cpSync(target, backup, { recursive: true });
+    // The folder itself can't be removed while it's in use either, so empty it and refill it.
     for (const entry of fs.readdirSync(target)) fs.rmSync(path.join(target, entry), { recursive: true, force: true });
-    fs.rmSync(target, { recursive: true, force: true });
+    fs.cpSync(path.join(track.exercises, id), target, { recursive: true });
   }
   // A reset starts a new attempt: help logged on earlier attempts no longer counts against it.
   const entry = t.trackExercises(progress, track.name)[id];
@@ -178,11 +179,13 @@ if (!fs.existsSync(ignore)) {
   fs.mkdirSync(path.dirname(ignore), { recursive: true });
   fs.writeFileSync(ignore, "__pycache__/\nnode_modules/\n");
 }
-if (fs.existsSync(target)) {
+if (arg !== "--reset" && fs.existsSync(target)) {
   console.log(`Already set up at ${path.relative(cwd, target)}/ (your changes are kept). Full path: ${target}`);
-} else {
+} else if (!fs.existsSync(target)) {
   fs.cpSync(path.join(track.exercises, id), target, { recursive: true });
   console.log(`Set up ${id} at ${path.relative(cwd, target)}/ (full path: ${target})`);
+} else {
+  console.log(`Set up a fresh copy of ${id} at ${path.relative(cwd, target)}/ (full path: ${target})`);
 }
 
 t.trackExercises(progress, track.name)[id] ??= { status: "in_progress", attempts: 0 };

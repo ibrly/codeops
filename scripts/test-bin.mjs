@@ -772,3 +772,22 @@ test("a coach help log in a project doesn't capture a learning folder inside it"
   assert.ok(existsSync(join(learning, "codeops-foundations", "01-values-and-types")));
   assert.ok(!existsSync(join(project, "codeops-foundations")), "nothing is created in the project");
 });
+
+test("the Uses: lint can't be dodged with spacing, variables, or a near-miss word", () => {
+  const sneak = (code) =>
+    verifyFixture((d) => {
+      const f = join(d, "solutions", "03-loops", "total.js");
+      writeFileSync(f, code + "\n" + readFileSync(f, "utf8"));
+    });
+  for (const code of ['require( "child_process" );', 'const m = "child_" + "process"; require(m);', 'import("node:net");']) {
+    const r = sneak(code);
+    assert.strictEqual(r.status, 1, code);
+    assert.match(r.stderr, /justify it in NOTES\.md/, code);
+  }
+  const nearMiss = verifyFixture((d) => {
+    writeFileSync(join(d, "solutions", "03-loops", "NOTES.md"), readFileSync(join(d, "solutions", "03-loops", "NOTES.md"), "utf8") + "**Uses:** nothing, no network access.\n");
+    const f = join(d, "solutions", "03-loops", "total.js");
+    writeFileSync(f, 'require("net");\n' + readFileSync(f, "utf8"));
+  });
+  assert.strictEqual(nearMiss.status, 1, '"network" must not justify net');
+});

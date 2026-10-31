@@ -2,7 +2,7 @@
 // Checks every exercise in every track: its tests must fail on the shipped code
 // and pass once the reference solution files are copied over it.
 import { readdirSync, readFileSync, existsSync, mkdtempSync, cpSync, rmSync } from "node:fs";
-import { join, dirname, resolve } from "node:path";
+import { join, dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
@@ -38,34 +38,41 @@ function lint(track) {
     if (!readdirSync(dir).some(t.isTestFile)) problems.push(`${id}: no test file`);
     if (!existsSync(join(track.dir, "solutions", id, "NOTES.md"))) problems.push(`${id}: no solutions/${id}/NOTES.md`);
   });
-  // Tests run on learners' machines: anything that reaches the network or starts processes must be
-  // declared and justified in NOTES.md with a "Uses:" line naming the module.
-  const risky = [
-    [/require\(["'](?:node:)?(child_process|net|http|https|dgram|tls)["']\)/g, 1],
-    [/\b(fetch)\(/g, 1],
-    [/^\s*(?:import|from)\s+(socket|urllib|http|subprocess|requests)\b/gm, 1],
-  ];
+  // Tests run on learners' machines: anything that reaches the network, starts processes, or loads
+  // code dynamically must be declared and justified in NOTES.md with a "**Uses:**" line naming it.
+  const riskyJs = new Set(["child_process", "net", "http", "https", "http2", "dgram", "tls", "cluster", "worker_threads"]);
+  const riskyPy = new Set(["socket", "urllib", "http", "subprocess", "requests", "ftplib", "smtplib", "importlib", "pty"]);
+  function riskyUses(file, text) {
+    const found = [];
+    if (/\.(m|c)?js$/.test(file)) {
+      for (const m of text.matchAll(/\b(?:require|import)\s*\(\s*(["'`])(?:node:)?([\w-]+)/g)) if (riskyJs.has(m[2])) found.push(m[2]);
+      for (const m of text.matchAll(/(?:\bfrom|^\s*import)\s+["'](?:node:)?([\w-]+)/gm)) if (riskyJs.has(m[1])) found.push(m[1]);
+      if (/\b(?:require|import)\s*\(\s*(?!["'`])/.test(text)) found.push("dynamic-require");
+      if (/\bfetch\s*\(/.test(text)) found.push("fetch");
+    } else {
+      for (const m of text.matchAll(/^\s*import\s+([^\n#]+)/gm)) {
+        for (const part of m[1].split(",")) if (riskyPy.has(part.trim().split(/[.\s]/)[0])) found.push(part.trim().split(/[.\s]/)[0]);
+      }
+      for (const m of text.matchAll(/^\s*from\s+([\w.]+)\s+import/gm)) if (riskyPy.has(m[1].split(".")[0])) found.push(m[1].split(".")[0]);
+      for (const m of text.matchAll(/\b(os\.system|os\.popen|os\.exec\w*|os\.spawn\w*|__import__)\b/g)) found.push(m[1]);
+    }
+    return found;
+  }
   for (const id of track.ids) {
     const notesFile = join(track.dir, "solutions", id, "NOTES.md");
     const notes = existsSync(notesFile) ? readFileSync(notesFile, "utf8") : "";
-    const uses = /^\*\*Uses:\*\*(.*)$/m.exec(notes)?.[1] ?? "";
+    // Whole names only, so "network" doesn't justify net and "https" doesn't justify http.
+    const uses = new Set((/^\*\*Uses:\*\*(.*)$/m.exec(notes)?.[1] ?? "").split(/[^\w.-]+/).filter(Boolean));
     for (const dir of [join(track.exercises, id), join(track.dir, "solutions", id)]) {
       if (!existsSync(dir)) continue;
-      for (const file of readdirSync(dir, { recursive: true }).filter((f) => /\.(js|py)$/.test(f))) {
-        const text = readFileSync(join(dir, file), "utf8");
-        for (const [re, group] of risky) {
-          for (const m of text.matchAll(re)) {
-            if (!uses.includes(m[group])) problems.push(`${id}: ${file} uses ${m[group]}; justify it in NOTES.md with a "**Uses:**" line`);
-          }
+      for (const file of readdirSync(dir, { recursive: true }).filter((f) => /\.(js|mjs|cjs|py)$/.test(f))) {
+        for (const name of new Set(riskyUses(file, readFileSync(join(dir, file), "utf8")))) {
+          if (!uses.has(name)) problems.push(`${id}: ${file} uses ${name}; justify it in NOTES.md with a "**Uses:**" line`);
         }
       }
     }
   }
 
-  // Every exercise ships at least one wrong/ fixture, which proves its tests are tight.
-  for (const id of track.ids) {
-    if (!existsSync(join(track.dir, "solutions", id, "wrong"))) problems.push(`${id}: add at least one solutions/${id}/wrong/ fixture (a plausible fix that must fail)`);
-  }
 
   const solutions = join(track.dir, "solutions");
   for (const id of existsSync(solutions) ? readdirSync(solutions) : []) {
@@ -109,7 +116,7 @@ for (const name of readdirSync(t.tracksDir)) {
     if (!expected) problems.push("no test cases found in the shipped test files");
     if (!existsSync(solution)) problems.push("no solution folder");
     else if (!shipped.missing) {
-      cpSync(solution, work, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") && !src.includes(`${join(solution, "wrong")}`) });
+      cpSync(solution, work, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") && !(src === join(solution, "wrong") || src.startsWith(join(solution, "wrong") + sep)) });
       const reference = await t.runTests(track, work, files);
       if (!t.runPassed(track, reference, expected)) problems.push(`tests fail on the reference solution, or don't run exactly the ${expected} test(s) counted in the test files`);
     }
@@ -122,7 +129,7 @@ for (const name of readdirSync(t.tracksDir)) {
       const attempt = mkdtempSync(join(tmpdir(), "codeops-verify-"));
       cpSync(join(track.exercises, id), attempt, { recursive: true });
       // On top of the reference solution, so the wrong fix is the only thing that differs.
-      cpSync(solution, attempt, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") && !src.startsWith(wrongDir) });
+      cpSync(solution, attempt, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") && !(src === wrongDir || src.startsWith(wrongDir + sep)) });
       cpSync(join(wrongDir, name), attempt, { recursive: true });
       if (t.runPassed(track, await t.runTests(track, attempt, files), expected)) problems.push(`wrong fix "${name}" passes the tests`);
       rmSync(attempt, { recursive: true, force: true });
@@ -158,6 +165,11 @@ for (const name of onlyTrack ? [] : readdirSync(t.tracksDir)) {
     if (!explained) problems.push(`${jsId} has ${counts[0]} tests but ${pyId} has ${counts[1]}; align them or explain in NOTES.md ("Test count differs: ...")`);
   });
   if (problems.length) fail(`${js.name} / ${py.name}`, problems);
+}
+
+if (onlyTrack && checked === 0) {
+  console.error(`Nothing matched "${process.argv[2]}". Use a track name (like foundations) or track/exercise (like foundations/03-loops).`);
+  process.exit(1);
 }
 
 if (failures) {

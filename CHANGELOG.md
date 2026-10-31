@@ -2,6 +2,15 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Fixed
+
+- **A fake pass through the help log.** A third review found that an escape hatch whose concept or guess contained text like `attempt: 2` was counted against a different copy of the exercise, so the exercise was recorded as passed. The log is now read as whole `key: value` lines only.
+- **Coach data no longer captures learning folders.** The `.codeops/` that `/codeops:coach` creates in a project (help log only) no longer becomes the learning folder for one made inside that project, which had put exercises into the learner's git repo.
+- **The `Uses:` lint can't be dodged** with spacing, a variable or dynamic `require`/`import`, comma-separated Python imports, `os.system`/`__import__`, `.mjs` files, or a near-miss word like "network". Two legitimate uses it newly caught are now justified.
+- On Windows, `--reset` refills an in-use exercise folder instead of crashing; a mistyped `verify-exercises` filter fails instead of verifying nothing; `--report` shows concepts only for real exercises.
+
 ## 0.11.1
 
 Smoke-tested: not needed, exercise-only change (see the CONTRIBUTING table); CI verified all 56 exercises, 2026-10-31.
