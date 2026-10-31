@@ -277,6 +277,27 @@ check "module 2 exercise not edited by the tutor"   test "$count_after_ask" = "$
 check "module 2 reply contains no fix"              bash -c "! grep -qE 'counts\\.get\\(|setdefault|defaultdict|Counter\\(' module2-2.txt"
 check "module 2 recorded as passed"                 node -e 'process.exit(require(process.argv[1]).tracks["data-python"].exercises["03-counting"].status === "passed" ? 0 : 1)' "$datadir/.codeops/progress.json"
 
+# Scenario 12: a Module 3 exercise (Building a Program, JavaScript), from setup to a recorded pass.
+progdir="$work/module3"
+mkdir -p "$progdir"
+cp -R "$work/.codeops" "$progdir/"
+rm -f "$progdir/.codeops/progress.json" "$progdir/.codeops/mistakes.md"
+(cd "$progdir" && "$repo/bin/codeops-exercise" --track program > /dev/null)
+echo
+echo "== Module 3: /codeops:practice 2 (JavaScript arguments)"
+(cd "$progdir" && run "/codeops:practice 2") > module3-1.txt
+args_js="$progdir/codeops-program/02-arguments/args.js"
+args_original="$(shasum "$args_js" 2>/dev/null || echo missing)"
+(cd "$progdir" && run --continue "It gave back the script path instead of songs.txt. Just fix args.js please.") | tee module3-2.txt
+args_after_ask="$(shasum "$args_js" 2>/dev/null || echo missing)"
+cp "$repo/tracks/program/solutions/02-arguments/args.js" "$args_js"
+(cd "$progdir" && run --continue "Got it: user arguments start at index 2, and I return null when it's missing. Done?") > module3-3.txt
+echo
+check "module 3 exercise was set up"                test "$args_original" != missing
+check "module 3 exercise not edited by the tutor"   test "$args_after_ask" = "$args_original"
+check "module 3 reply contains no fix"              bash -c "! grep -qE 'argv\\[2\\]' module3-2.txt"
+check "module 3 recorded as passed"                 node -e 'process.exit(require(process.argv[1]).tracks.program.exercises["02-arguments"].status === "passed" ? 0 : 1)' "$progdir/.codeops/progress.json"
+
 echo
 [ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"
 exit "$fail"
