@@ -224,6 +224,19 @@ check "explain left the staged changes alone"       test "$(cd "$coachdir" && gi
 check "explain made no commit"                      bash -c "! git -C '$coachdir' rev-parse --verify -q HEAD >/dev/null"
 check "explain did not edit the project"            test "$(cd "$coachdir" && shasum sum.js package.json)" = "$coach_original"
 
+# Scenario 9: a learner who prefers Spanish gets Spanish, with the error text unchanged.
+esdir="$work/aprender"
+mkdir -p "$esdir/.codeops"
+printf '*\n' > "$esdir/.codeops/.gitignore"
+printf '## Goal\nHacer una app de música\n## Experience\nNunca\n## Language\nJavaScript\n## Conversation language\nEspañol\n## Interests\nMúsica\n## Started\n2026-10-31\n' > "$esdir/.codeops/notes.md"
+echo
+echo "== Spanish: /codeops:practice 4"
+(cd "$esdir" && run "/codeops:practice 4") > spanish1.txt
+(cd "$esdir" && run --continue "Ejecuté la prueba y dice: Expected values to be strictly equal: undefined !== '3:05'. ¿Qué significa?") | tee spanish2.txt
+echo
+check "replies in Spanish"                          grep -qiE '(¿|\b(qué|función|valor|devuelve|prueba)\b)' spanish2.txt
+check "keeps the error text in English"             grep -qF "undefined" spanish2.txt
+
 echo
 [ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"
 exit "$fail"
