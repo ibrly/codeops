@@ -80,6 +80,21 @@ for (const name of readdirSync(t.tracksDir)) {
   }
 }
 
+// Language versions of a module (X and X-python) must line up: same count, numbering, and capstone.
+// Names may differ where the languages do (05-arrays vs 05-lists).
+for (const name of readdirSync(t.tracksDir)) {
+  if (!name.endsWith("-python")) continue;
+  const py = t.loadTrack(name);
+  const js = t.loadTrack(name.slice(0, -"-python".length));
+  if (!py || !js) continue;
+  const numbers = (track) => track.ids.map((id) => id.slice(0, 2)).join(",");
+  const problems = [];
+  if (numbers(js) !== numbers(py)) problems.push(`exercises ${numbers(js)} in ${js.name} but ${numbers(py)} in ${py.name}`);
+  if (js.capstone !== py.capstone) problems.push(`capstone ${js.capstone} in ${js.name} but ${py.capstone} in ${py.name}`);
+  if (Boolean(js.next) !== Boolean(py.next)) problems.push("only one language version names a next track");
+  if (problems.length) fail(`${js.name} / ${py.name}`, problems);
+}
+
 if (failures) {
   console.error(`\n${failures} problem(s) across ${checked} exercise(s).`);
   process.exit(1);

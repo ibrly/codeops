@@ -59,7 +59,7 @@ Before you build a track, **open an issue** with the "New exercise or track" tem
 
 ## Add a second module
 
-A module is just another track that follows an earlier one. Build it once per language, with the language as a suffix except for JavaScript: for example `data` and `data-python`, following `foundations` and `foundations-python`. Then set `next` in the earlier track's `track.json` so learners who finish it are pointed to yours. Exercise ids start again at `01` in every track, and progress is kept per track, so nothing else needs to change.
+A module is just another track that follows an earlier one. Build it once per language, with the language as a suffix except for JavaScript: for example `data` and `data-python`, following `foundations` and `foundations-python`. Then set `next` in the earlier track's `track.json` so learners who finish it are pointed to yours. `verify-exercises` checks that the two language versions line up: the same number of exercises, the same numbering and capstone, and `next` set in both or neither. Exercise names may differ where the languages genuinely do, like `05-arrays` and `05-lists`. Exercise ids start again at `01` in every track, and progress is kept per track, so nothing else needs to change.
 
 ## Search and fast-moving topics
 

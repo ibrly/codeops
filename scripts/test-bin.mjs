@@ -571,3 +571,21 @@ test("interrupting a check stops its tests and removes the temp copy", async () 
   const left = spawnSync("pgrep", ["-f", temp], { encoding: "utf8" }).stdout.trim();
   assert.strictEqual(left, "", "no test process left running");
 });
+
+test("verify-exercises catches language versions of a module drifting apart", () => {
+  const dir = mkdtempSync(join(tmpdir(), "codeops-tracks-"));
+  test.after(() => rmSync(dir, { recursive: true, force: true }));
+  cpSync(join(root, "tracks", "data"), join(dir, "data"), { recursive: true });
+  cpSync(join(root, "tracks", "data-python"), join(dir, "data-python"), { recursive: true });
+  const verify = () => {
+    const { NODE_TEST_CONTEXT, ...env } = process.env;
+    return spawnSync(process.execPath, [join(root, "scripts", "verify-exercises.mjs")], { encoding: "utf8", env: { ...env, CODEOPS_TRACKS_DIR: dir } });
+  };
+  assert.strictEqual(verify().status, 0, "the real pair lines up");
+  const m = JSON.parse(readFileSync(join(dir, "data", "track.json"), "utf8"));
+  m.next = "data-python";
+  writeFileSync(join(dir, "data", "track.json"), JSON.stringify(m));
+  const r = verify();
+  assert.strictEqual(r.status, 1);
+  assert.match(r.stderr, /only one language version names a next track/);
+});
