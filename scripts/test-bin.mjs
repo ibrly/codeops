@@ -619,3 +619,13 @@ test("help logged before any reset doesn't write a confusing counter", () => {
   run(cwd, "codeops-recall", "add", "--concept", "loops", "--how", "hint", "--exercise", "3");
   assert.doesNotMatch(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /attempt|fresh_copy/);
 });
+
+test("a passing check says what's next, and recall says when the next check is", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "1");
+  solve(cwd, "foundations", "01-values-and-types");
+  const out = run(cwd, "codeops-check", "1").out;
+  assert.match(out, /RESULT: foundations\/01-values-and-types passed \(test run 1\)\nNext: 02-conditionals \(set it up with: codeops-exercise 2\)/);
+  run(cwd, "codeops-recall", "add", "--concept", "types", "--how", "hint");
+  assert.match(run(cwd, "codeops-recall").out, /No recall checks due\. The next one is on \d{4}-\d{2}-\d{2}\./);
+});

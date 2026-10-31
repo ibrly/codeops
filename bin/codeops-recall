@@ -96,7 +96,11 @@ if (!action) {
     .sort((a, b) => field(a.entry, "due").localeCompare(field(b.entry, "due")));
   console.log(`Today: ${today}`);
   if (!due.length) {
-    console.log("No recall checks due.");
+    const upcoming = parts
+      .filter((entry) => !field(entry, "retired") && field(entry, "due"))
+      .map((entry) => field(entry, "due"))
+      .sort()[0];
+    console.log(upcoming ? `No recall checks due. The next one is on ${upcoming}.` : "No recall checks due.");
   } else {
     // A learner returning after a break gets a short warm-up, not a wall of questions.
     console.log(`${due.length} recall check(s) due. Do these ${Math.min(due.length, maxListed)} today:`);

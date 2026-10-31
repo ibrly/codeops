@@ -97,6 +97,12 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => p
     console.log(`\nNOTE: your copy of ${name} differs from the original, so this was checked against the original test.`);
   }
   console.log(`\nRESULT: ${track.name}/${id} ${result} (test run ${entry.attempts})`);
+  if (result === "passed" || result === "assisted") {
+    const done = t.readProgress(cwd).tracks[track.name]?.exercises ?? {};
+    const next = track.ids.find((other) => !["passed", "assisted"].includes(done[other]?.status));
+    if (next) console.log(`Next: ${next} (set it up with: codeops-exercise ${next.slice(0, 2).replace(/^0/, "")})`);
+    else console.log("Next: every exercise in this track is done. See codeops-exercise --list.");
+  }
   if (result === "assisted" && id === track.capstone) {
     console.log("The capstone passed with help, so it's recorded as assisted and the track isn't marked complete.");
   }
