@@ -9,6 +9,12 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 - **Module 3: Building a Program**, in JavaScript (`program`) and Python (`program-python`): modules, command-line arguments, reading a file, saving JSON, `async`/`await` (JavaScript) or the `__main__` guard (Python), and a capstone that's a complete command-line program. Working with Data points to it as the next track.
 - A **"The tutor felt wrong" issue form** whose fields map to the teaching contract, and a README troubleshooting table.
 - `verify-exercises` checks that a module's JavaScript and Python versions line up.
+- **Start by asking.** Saying "I want to learn to code" (or asking to be guided rather than given the answer) starts CodeOps without knowing `/codeops:start`. Ordinary coding requests don't.
+
+### Changed
+
+- Onboarding asks three questions instead of five: the conversation language is taken from how the learner writes, and interests are asked after the first exercise.
+- After the last module, the tutor connects completion to the learner's own goal and suggests starting it with `/codeops:coach`.
 
 ### Fixed
 

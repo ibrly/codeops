@@ -1,7 +1,7 @@
 ---
 name: start
-description: Start or resume a CodeOps learning session. Onboards new learners and loads the tutoring rules.
-disable-model-invocation: true
+description: Start or resume a CodeOps learning session, with a tutor that guides instead of writing the code. Onboards new learners and loads the tutoring rules.
+when_to_use: Use when the user says they want to learn programming or learn to code, asks to be taught or guided through something rather than given the answer, or asks how to start with CodeOps. Don't use it for ordinary requests to write, fix, or explain code for someone who just wants it done.
 allowed-tools: Bash(codeops-contract) Bash(codeops-exercise *) Bash(codeops-recall *)
 ---
 

@@ -237,6 +237,23 @@ echo
 check "replies in Spanish"                          grep -qiE '(¿|\b(qué|función|valor|devuelve|prueba)\b)' spanish2.txt
 check "keeps the error text in English"             grep -qF "undefined" spanish2.txt
 
+# Scenario 10: asking in plain words reaches CodeOps; an ordinary coding request doesn't.
+askdir="$work/asking"
+mkdir -p "$askdir"
+skill_used() { # skill_used <prompt> -> prints the skills Claude invoked
+  (cd "$askdir" && printf '%s' "$1" | claude -p --plugin-dir "$repo" --setting-sources project,local \
+    --output-format stream-json --verbose --max-turns 2 2>/dev/null) | grep -o '"skill":"[^"]*"' | sort -u
+}
+echo
+echo "== Asking: learning intent"
+learn_skills="$(skill_used "I want to learn to code. Can you teach me without just giving me answers?")"
+echo "$learn_skills"
+echo "== Asking: ordinary coding request"
+code_skills="$(skill_used "Write me a JavaScript function that sorts a list of users by age.")"
+echo "$code_skills"
+check "learning intent starts CodeOps"              grep -q 'codeops:start' <<< "$learn_skills"
+check "ordinary coding request doesn't"             bash -c "! grep -q 'codeops:' <<< '$code_skills'"
+
 echo
 [ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"
 exit "$fail"
