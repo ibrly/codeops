@@ -4,7 +4,7 @@ Thanks for wanting to help! CodeOps is a project about learning, so first-time c
 
 ## Good ways to help
 
-- **Try it as a learner and report friction.** Where did the tutor give too much away, ask too many questions, or confuse you? Use the "The tutor felt wrong" issue form. This is the most useful contribution right now. A confirmed report becomes a test case in the behavior suite, so the same problem can't quietly come back.
+- **Try it as a learner and report friction.** Where did the tutor give too much away, ask too many questions, or confuse you? Use the "The tutor felt wrong" issue form. This is the most useful contribution right now. A confirmed report becomes a scenario in the behavior smoke test (`scripts/smoke-test.sh`), which maintainers run by hand before each release, so the same problem doesn't come back unnoticed.
 - **Add or improve an exercise.** Follow the recipe in [docs/adding-a-track.md](docs/adding-a-track.md).
 - **Improve the teaching contract** in [teaching/CONTRACT.md](teaching/CONTRACT.md). Changes here affect every lesson, so include an example conversation showing the problem and how your change fixes it.
 - **Fix** typos, unclear wording, or broken links.

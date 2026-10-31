@@ -4,7 +4,7 @@
 
 CodeOps is an open-source [Claude Code](https://code.claude.com/docs) plugin that teaches programming by making you think instead of handing you solutions. You fix small, deliberately broken programs, and an AI tutor coaches you to the answer one hint at a time.
 
-> **Status: early.** Three modules work end to end in JavaScript and Python: Programming Foundations (10 exercises), Working with Data (6), and Building a Program (6). Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
+> **Status: early.** Three modules in JavaScript and Python, every exercise verified in CI, with real tutoring sessions smoke-tested in Foundations and Working with Data: Programming Foundations (10 exercises), Working with Data (6), and Building a Program (6). Expect rough edges, and please [report them](https://github.com/ibrly/codeops/issues/new/choose).
 
 ## Why CodeOps exists
 
@@ -15,7 +15,7 @@ CodeOps flips the default. The tutor:
 - **Climbs a hint ladder.** It asks clarifying questions first, then points to where the problem is, then gives a small hint, then a partial fix, and only then the full answer.
 - **Lets you ask for the answer, at a small honest cost.** You give your best guess first and explain the fix back afterward, and the concept is scheduled for quick recall checks that space out from a day to a month, then retire once you've clearly got it. You're never trapped, but skipping the thinking isn't free.
 - **Measures progress with evidence.** An exercise counts as passed only when its tests pass. If you needed the direct answer, it's recorded as *assisted*, not passed.
-- **Never edits your code.** It reads your files and runs your tests. You write every fix.
+- **Never edits your code.** It reads your files and runs your exercise's tests (in your own projects, you run them). You write every fix.
 
 ## Quick start
 
@@ -69,43 +69,51 @@ CodeOps has no servers or account of its own, but the tutor is Claude, so a sess
 
 ## An example session
 
-From one real test run, trimmed with `...` but otherwise word for word. The learner said during onboarding that they're into running.
+From one real test run, trimmed with `...` but otherwise word for word. The learner asks for the answer, so this shows the escape hatch and what it costs.
 
 ````text
-> /codeops:practice 3
+> /codeops:practice 4
 
-Exercise 3 is set up in codeops-foundations/03-loops/.
+You're on 04 · Functions.
 
-The idea: a for loop is like running laps. You need a starting point, a
-rule for when to stop, and a step between laps. Arrays number their
-items from 0, so a playlist with 3 songs has positions 0, 1, 2. If you
-set the stop rule one lap off, you get an off-by-one error.
+A function can do two different things with a result. It can show it:
+console.log prints it on the screen for you to read. Or it can give it
+back with return, so the rest of the program can use it. ...
+Open codeops-foundations/04-functions/format.js. Then, from inside that
+folder, run: node --test
+What does the failing test say?
+
+> I really don't get it. Just give me the answer please.
+
+Sure. Before I show you, what's your best guess, even a rough one? If you
+have no idea, that's fine too.
+
+> My guess: maybe it prints the time but doesn't give it back?
+
+Your guess is exactly right. I've noted this so we can do a quick recall
+check later.
+
+The fix. In format.js, line 5, change:
+    console.log(minutes + ":" + rest);
+to:
+    return minutes + ":" + rest;
 ...
-First, run the test from inside the exercise folder:
-    cd codeops-foundations/03-loops
-    node --test
-What does the failure say?
+Make that change, then run node --test again. While it runs: in a
+sentence or two, how would you explain the difference between
+console.log and return?
 
-> The test says 300 !== 330. Can you just fix total.js for me?
+> console.log only shows it on screen, return hands the value back to
+> whoever called the function. I made the change, can you check it?
 
-Sure. Before I show you, what's your best guess, even a rough one?
-
-One clue to help you guess: the playlist is 330 seconds long, but the
-code only added up to 300. So one song got left out.
-
-> Oh, the loop stops one early! I changed it to i < songs.length. Is it done?
-
-It passed: RESULT: 03-loops passed. You worked it out yourself from a
-single clue, so I didn't need to show you any code.
-
-Why it works: an array with n items has indexes 0 to n - 1. ...
-
-Quick check on a different example:
-    const splits = [312, 305, 298, 301, 290];
-    for (let i = 0; i <= splits.length; i++) {
-      console.log(splits[i]);
+All 3 tests pass. The result is assisted, because you used the full
+answer. That's fine; it only means a recall check will come up tomorrow.
+...
+Quick check, on a different example. What does this program print?
+    function pace(km, minutes) {
+      console.log(minutes / km);
     }
-Note the <=. What does the very last line it prints show, and why?
+    const myPace = pace(5, 25);
+    console.log("Pace: " + myPace);
 ````
 
 ## Programming Foundations
@@ -149,7 +157,7 @@ The third module, where the playlist code becomes a real program you run from th
 
 CodeOps keeps everything in the folder you learn in:
 
-- `codeops-foundations/` or `codeops-foundations-python/`: your copies of the exercises
+- `codeops-<track>/` (for example `codeops-foundations/` or `codeops-data-python/`): your copies of the exercises
 - `.codeops/`: your notes, progress, and the concepts you needed help with. This folder ignores itself in git, so it's never committed by accident.
 
 CodeOps itself sends nothing anywhere. Your conversations with the tutor go through Claude Code under its own terms.
