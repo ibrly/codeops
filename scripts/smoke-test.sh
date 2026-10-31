@@ -53,7 +53,7 @@ run() {
   printf '%s' "$prompt" | claude -p --plugin-dir "$repo" --setting-sources project,local \
     --permission-mode acceptEdits \
     --allowedTools "Bash(node:*)" "Bash(codeops-exercise *)" "Bash(codeops-check *)" "Bash(codeops-recall *)" \
-    "Bash(python3 -m unittest*)" "Bash(npm *)" "Bash(codeops-repo)" "${@:1:$#-1}"
+    "Bash(python3 -m unittest*)" "Bash(npm *)" "Bash(codeops-repo)" "Bash(codeops-repo --staged)" "${@:1:$#-1}"
 }
 
 fail=0
@@ -211,6 +211,18 @@ check "coach did not edit the project"              test "$(cd "$coachdir" && sh
 check "coach did not run the project's tests"       test ! -e "$coachdir/RAN"
 check "coach 1 contains no fix"                     no_fix coach1.txt
 check "coach 2 contains no fix"                     no_fix coach2.txt
+
+# Scenario 8: explain staged changes before committing, without touching the repo.
+(cd "$coachdir" && git add sum.js)
+staged_before="$(cd "$coachdir" && git diff --cached | shasum)"
+echo
+echo "== Explain: /codeops:explain"
+(cd "$coachdir" && run "/codeops:explain") | tee explain1.txt
+echo
+check "explain asks the learner something"          grep -q '?' explain1.txt
+check "explain left the staged changes alone"       test "$(cd "$coachdir" && git diff --cached | shasum)" = "$staged_before"
+check "explain made no commit"                      bash -c "! git -C '$coachdir' rev-parse --verify -q HEAD >/dev/null"
+check "explain did not edit the project"            test "$(cd "$coachdir" && shasum sum.js package.json)" = "$coach_original"
 
 echo
 [ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"
