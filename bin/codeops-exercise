@@ -88,6 +88,9 @@ if (arg === "--reset") {
   const backup = path.join(backups, `${track.name}-${id}-${t.localDate()}-${n}`);
   fs.mkdirSync(backups, { recursive: true });
   fs.renameSync(target, backup);
+  // A reset starts a new attempt: help logged on earlier attempts no longer counts against it.
+  const entry = t.trackExercises(progress, track.name)[id];
+  if (entry) entry.resets = (entry.resets || 0) + 1;
   console.log(`Your previous attempt is saved in ${path.relative(cwd, backup)}/`);
 }
 // Keep caches from the learner's own test runs out of git if they commit their work.

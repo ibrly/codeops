@@ -219,7 +219,11 @@ test("--reset backs up the learner's attempt and restores the original", () => {
   const backups = join(cwd, ".codeops", "backups");
   assert.strictEqual(readFileSync(join(backups, `foundations-03-loops-${stamp}-1`, "total.js"), "utf8"), "// wrecked 1\n");
   assert.strictEqual(readFileSync(join(backups, `foundations-03-loops-${stamp}-2`, "total.js"), "utf8"), "// wrecked 2\n");
-  assert.strictEqual(readFileSync(join(cwd, ".codeops", "progress.json"), "utf8"), before);
+  const after = JSON.parse(readFileSync(join(cwd, ".codeops", "progress.json"), "utf8"));
+  const was = JSON.parse(before);
+  assert.strictEqual(after.tracks.foundations.exercises["03-loops"].resets, 2);
+  delete after.tracks.foundations.exercises["03-loops"].resets;
+  assert.deepStrictEqual(after, was, "a reset changes nothing else in progress");
 });
 
 test("an escape hatch logged after a pass still makes it assisted", () => {
@@ -363,4 +367,48 @@ test("codeops-repo --staged shows staged changes without running anything", () =
   assert.match(out, /\+module\.exports = \(a\) => a\.reduce/);
   assert.ok(!existsSync(join(cwd, "RAN")));
   assert.match(git("status", "--short").stdout, /^A  sum\.js/m, "the index must be unchanged");
+});
+
+// Rewrites mistakes.md entries as if they had been logged on an earlier day.
+function backdate(cwd) {
+  const file = join(cwd, ".codeops", "mistakes.md");
+  writeFileSync(file, readFileSync(file, "utf8").replace(/date: \S+/g, "date: 2000-01-01"));
+}
+
+test("after a reset, an unaided redo on a later day earns passed", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  run(cwd, "codeops-recall", "add", "--concept", "loops", "--how", "escape hatch", "--exercise", "3");
+  solve(cwd, "foundations", "03-loops");
+  assert.match(run(cwd, "codeops-check", "3").out, /03-loops assisted/);
+  run(cwd, "codeops-exercise", "--reset", "3");
+  solve(cwd, "foundations", "03-loops");
+  assert.match(run(cwd, "codeops-check", "3").out, /03-loops assisted/, "a same-day redo doesn't count");
+  backdate(cwd);
+  assert.match(run(cwd, "codeops-check", "3").out, /03-loops passed/);
+  const entry = progress(cwd).tracks.foundations.exercises["03-loops"];
+  assert.strictEqual(entry.status, "passed");
+  assert.strictEqual(entry.redone, true);
+});
+
+test("help logged on the new attempt still makes it assisted", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  run(cwd, "codeops-exercise", "--reset", "3");
+  run(cwd, "codeops-recall", "add", "--concept", "loops", "--how", "escape hatch", "--exercise", "3");
+  assert.match(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /attempt: 1/);
+  solve(cwd, "foundations", "03-loops");
+  assert.match(run(cwd, "codeops-check", "3").out, /03-loops assisted/);
+});
+
+test("the capstone can be completed after an assisted attempt", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "10");
+  run(cwd, "codeops-recall", "add", "--concept", "max", "--how", "hint", "--exercise", "10");
+  solve(cwd, "foundations", "10-capstone");
+  assert.match(run(cwd, "codeops-check", "10").out, /10-capstone assisted/);
+  run(cwd, "codeops-exercise", "--reset", "10");
+  backdate(cwd);
+  solve(cwd, "foundations", "10-capstone");
+  assert.match(run(cwd, "codeops-check", "10").out, /10-capstone passed/);
 });

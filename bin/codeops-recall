@@ -40,6 +40,7 @@ if (action === "add") {
   if (!hows.includes(opts.how)) fail(`--how must be one of: ${hows.join(", ")}.`);
   if (opts.exercise && opts.file) fail("Use --exercise or --file, not both.");
   let exercise;
+  let attempt;
   let downgrade;
   if (opts.exercise) {
     const progress = t.readProgress(root);
@@ -48,6 +49,7 @@ if (action === "add") {
     const id = track.ids.find((d) => d === opts.exercise || d.startsWith(n + "-"));
     if (!id) fail(`No exercise "${opts.exercise}" in ${track.name}.`);
     exercise = `${track.name}/${id}`;
+    attempt = t.trackExercises(progress, track.name)[id]?.resets || 0;
     // Help logged after a pass still counts: an escape hatch (or any help on the capstone) makes it assisted.
     const entry = t.trackExercises(progress, track.name)[id];
     if (entry?.status === "passed" && (opts.how === "escape hatch" || id === track.capstone)) {
@@ -60,7 +62,7 @@ if (action === "add") {
   }
   const clean = (s) => String(s).replace(/\s+/g, " ").trim();
   const lines = [`- concept: ${clean(opts.concept)}`];
-  if (exercise) lines.push(`  exercise: ${exercise}`);
+  if (exercise) lines.push(`  exercise: ${exercise}`, `  attempt: ${attempt}`);
   if (opts.file) lines.push(`  file: ${clean(opts.file)}`);
   lines.push(`  date: ${today}`, `  how: ${opts.how}`);
   if (opts.guess) lines.push(`  guess: ${JSON.stringify(clean(opts.guess))}`);

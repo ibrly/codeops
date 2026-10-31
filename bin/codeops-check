@@ -21,7 +21,10 @@ if (!id || !fs.existsSync(dir)) {
 // Exercises the learner needed help on, from .codeops/mistakes.md. Entries name them as
 // "exercise: <track>/<id>"; the original JavaScript track also accepts a bare "<id>".
 // An escape-hatch entry makes a pass "assisted"; for the capstone, any help does.
-function helpUsed() {
+// Only help on the current attempt counts (entries without "attempt" belong to attempt 0), so a
+// reset and an unaided redo can earn "passed". A redo on the same day as an earlier escape hatch
+// doesn't count, because the answer is still fresh.
+function helpUsed(attempt) {
   let text = "";
   try {
     text = fs.readFileSync(path.join(cwd, ".codeops", "mistakes.md"), "utf8");
@@ -29,8 +32,10 @@ function helpUsed() {
   const prefix = track.name === t.defaultTrack ? `(?:${track.name}/)?` : `${track.name}/`;
   const pattern = new RegExp(`exercise:\\s*${prefix}${id}\\b`);
   const entries = text.split(/^- /m).filter((e) => pattern.test(e));
-  if (id === track.capstone) return entries.length > 0;
-  return entries.some((e) => /how:\s*escape hatch/.test(e));
+  const attemptOf = (e) => Number(/attempt:\s*(\d+)/.exec(e)?.[1] ?? 0);
+  const counts = (e) => id === track.capstone || /how:\s*escape hatch/.test(e);
+  if (entries.some((e) => attemptOf(e) === attempt && counts(e))) return true;
+  return entries.some((e) => attemptOf(e) < attempt && /how:\s*escape hatch/.test(e) && e.includes(`date: ${t.localDate()}`));
 }
 
 const check = t.prepareCheck(track, id, dir);
@@ -50,7 +55,8 @@ for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => process.exi
 
   let result;
   if (run.status === 0) {
-    result = helpUsed() ? "assisted" : "passed";
+    result = helpUsed(entry.resets || 0) ? "assisted" : "passed";
+    if (entry.status === "assisted" && result === "passed") entry.redone = true;
     if (entry.status !== "passed") entry.status = result;
     entry.passed_at ??= t.localDate();
   } else {
