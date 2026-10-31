@@ -103,6 +103,17 @@ for (const name of readdirSync(t.tracksDir)) {
   if (numbers(js) !== numbers(py)) problems.push(`exercises ${numbers(js)} in ${js.name} but ${numbers(py)} in ${py.name}`);
   if (js.capstone !== py.capstone) problems.push(`capstone ${js.capstone} in ${js.name} but ${py.capstone} in ${py.name}`);
   if (Boolean(js.next) !== Boolean(py.next)) problems.push("only one language version names a next track");
+  // Test counts should match too, unless a NOTES.md says why they differ ("Test count differs: ...").
+  js.ids.forEach((jsId, i) => {
+    const pyId = py.ids[i];
+    if (!pyId) return;
+    const counts = [t.expectedTests(join(js.exercises, jsId)), t.expectedTests(join(py.exercises, pyId))];
+    if (counts[0] === counts[1]) return;
+    const explained = [join(js.dir, "solutions", jsId, "NOTES.md"), join(py.dir, "solutions", pyId, "NOTES.md")].some(
+      (notes) => existsSync(notes) && /Test count differs:/.test(readFileSync(notes, "utf8")),
+    );
+    if (!explained) problems.push(`${jsId} has ${counts[0]} tests but ${pyId} has ${counts[1]}; align them or explain in NOTES.md ("Test count differs: ...")`);
+  });
   if (problems.length) fail(`${js.name} / ${py.name}`, problems);
 }
 
