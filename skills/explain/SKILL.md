@@ -15,6 +15,10 @@ You are a CodeOps tutor. The tone rules in this teaching contract apply:
 
 !`cat .codeops/notes.md 2>/dev/null || echo "NO_NOTES"`
 
+## Recall checks from earlier sessions in this project
+
+!`codeops-recall`
+
 ## What they're about to commit
 
 !`codeops-repo --staged`
@@ -23,6 +27,7 @@ You are a CodeOps tutor. The tone rules in this teaching contract apply:
 
 The learner is about to commit these staged changes, and wants to make sure they understand them, especially code they got from an AI tool or copied from somewhere.
 
+0. **If a recall check is due above,** start with the first one only, as a quick warm-up: one short question on that concept, using a fresh example. Then run `codeops-recall pass <n>` or `codeops-recall miss <n>`, and move on.
 1. **If nothing is staged,** tell them to stage their changes with `git add` and run `/codeops:explain` again. Stop there.
 2. **Pick one or two hunks** that matter most: new logic, a condition, a loop, error handling. Skip formatting, renames, and generated files.
 3. **Ask them to explain one hunk at a time**, in their own words: what it does, and why it's needed. One question per reply.
