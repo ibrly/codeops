@@ -32,9 +32,18 @@ for (const flag of ["--track", "--reset", "--taught"]) {
 const progress = t.readProgress(cwd);
 
 if (arg === "--tracks") {
+  // Every track, with honest counts for the ones the learner has started.
   for (const name of t.listTracks()) {
     const track = t.loadTrack(name);
-    console.log(`${name === t.activeTrack(progress) ? "→" : " "} ${name.padEnd(20)} ${track.title} · ${track.language}`);
+    const done = progress.tracks[name]?.exercises ?? {};
+    const count = (status) => track.ids.filter((id) => done[id]?.status === status).length;
+    let summary = "";
+    if (Object.keys(done).length) {
+      const capstone = done[track.capstone]?.status;
+      const state = capstone === "passed" ? "complete" : capstone === "assisted" ? "capstone assisted" : "in progress";
+      summary = ` · ${count("passed")} passed, ${count("assisted")} assisted, of ${track.ids.length} · ${state}`;
+    }
+    console.log(`${name === t.activeTrack(progress) ? "→" : " "} ${name.padEnd(20)} ${track.title} · ${track.language}${summary}`);
   }
   process.exit(0);
 }

@@ -638,3 +638,16 @@ test("check output shows every failure's message without Node's internals", () =
   assert.match(out, /'18560' !== 245/);
   assert.doesNotMatch(out, /node:internal|node:async_hooks/);
 });
+
+test("--tracks shows progress in every started track, and nothing for the others", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "10");
+  solve(cwd, "foundations", "10-capstone");
+  run(cwd, "codeops-check", "10");
+  run(cwd, "codeops-exercise", "--track", "data");
+  run(cwd, "codeops-exercise", "1");
+  const out = run(cwd, "codeops-exercise", "--tracks").out;
+  assert.match(out, /^  foundations .* · 1 passed, 0 assisted, of 10 · complete$/m);
+  assert.match(out, /^→ data .* · 0 passed, 0 assisted, of 6 · in progress$/m);
+  assert.match(out, /^  program-python\s+Building a Program \(Python\) · Python$/m);
+});

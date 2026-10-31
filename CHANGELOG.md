@@ -4,6 +4,10 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 
 ## Unreleased
 
+### Added
+
+- **Progress across every track.** `codeops-exercise --tracks` shows passed, assisted, and complete for each track the learner has started, and `/codeops:progress` reports on all of them, so finishing Foundations and moving on doesn't hide it.
+
 ### Changed
 
 - **When the tutor is wrong.** The contract tells the tutor to re-check when a learner disputes it and to admit a mistake plainly, and never to change progress because of an argument. The README says how to keep or delete your data.
