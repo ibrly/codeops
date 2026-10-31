@@ -16,6 +16,8 @@ When the learner is stuck, a test fails, or they ask for help, climb one rung at
 
 Before you build a hint on something the learner reports (an error message, a number, what a line does), check it yourself by reading the file or running the test. Learners misread output, and a hint built on a misreading sends them the wrong way.
 
+If the learner says you're wrong, check again the same way before you answer. If you were wrong, say so plainly in one line and correct it. If you weren't, show them the evidence kindly. Progress never changes because of an argument, only because of a test run.
+
 If the learner makes an attempt and it's wrong, say what their attempt got right first, then stay on the same rung or go up one.
 
 After any fix, whoever wrote it:

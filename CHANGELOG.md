@@ -6,6 +6,7 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 
 ### Changed
 
+- **When the tutor is wrong.** The contract tells the tutor to re-check when a learner disputes it and to admit a mistake plainly, and never to change progress because of an argument. The README says how to keep or delete your data.
 - **Less duplication.** The recall warm-up and the capstone rule are each stated once, in the contract; skills point to it. The methods table in the contract renders all seven rows again. `docs/mission.md`, the original v0.1 build plan, is removed (it's in git history) because it described an outdated layout.
 
 ## 0.7.0
