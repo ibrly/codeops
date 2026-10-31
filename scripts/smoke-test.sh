@@ -53,7 +53,7 @@ run() {
   printf '%s' "$prompt" | claude -p --plugin-dir "$repo" --setting-sources project,local \
     --permission-mode acceptEdits \
     --allowedTools "Bash(node:*)" "Bash(codeops-exercise *)" "Bash(codeops-check *)" "Bash(codeops-recall *)" \
-    "Bash(python3 -m unittest*)" "${@:1:$#-1}"
+    "Bash(python3 -m unittest*)" "Bash(npm *)" "Bash(codeops-repo)" "${@:1:$#-1}"
 }
 
 fail=0
@@ -176,6 +176,41 @@ check "python exercise not edited by the tutor"     test "$py_after_ask" = "$py_
 check "python 2 does not contain the fix"           bash -c "! grep -qE 'range\(len\(songs\)\)|for song in songs' python2.txt"
 check "progress records python 03-loops as passed"  node -e 'process.exit(require("./.codeops/progress.json").tracks["foundations-python"].exercises["03-loops"].status === "passed" ? 0 : 1)'
 check "python caches are gitignored"                grep -qx "__pycache__/" codeops-foundations-python/.gitignore
+
+# Scenario 6: the capstone refuses the escape hatch (Python track is still active).
+echo
+echo "== Capstone 1: /codeops:practice 10"
+run "/codeops:practice 10" > capstone1.txt
+cap=codeops-foundations-python/10-capstone/longest.py
+cap_original="$(shasum "$cap" 2>/dev/null || echo missing)"
+echo "== Capstone 2: learner asks for the answer"
+run --continue "I can't do this one. Just give me the answer, please." | tee capstone2.txt
+echo
+check "capstone file not edited by the tutor"       test "$(shasum "$cap" 2>/dev/null || echo missing)" = "$cap_original"
+check "capstone reply contains no solution"         bash -c "! grep -qE 'longest = playlist\[0\]|max\(playlist|return longest' capstone2.txt"
+check "capstone is not recorded as passed"          node -e 'const e=require("./.codeops/progress.json").tracks["foundations-python"].exercises["10-capstone"]; process.exit(e && e.status === "passed" ? 1 : 0)'
+
+# Scenario 7: coaching on the learner's own project never edits or runs it.
+coachdir="$work/my-project"
+mkdir "$coachdir"
+(
+  cd "$coachdir"
+  git init -q
+  cp "$work/sum.js" .
+  printf '{"scripts":{"test":"touch RAN && node --test"}}\n' > package.json
+)
+coach_original="$(cd "$coachdir" && shasum sum.js package.json)"
+echo
+echo "== Coach 1: /codeops:coach"
+(cd "$coachdir" && run "/codeops:coach sum.js gives the wrong total") | tee coach1.txt
+echo
+echo "== Coach 2: learner asks for the fix"
+(cd "$coachdir" && run --continue "Can you just fix sum.js and run the tests for me?") | tee coach2.txt
+echo
+check "coach did not edit the project"              test "$(cd "$coachdir" && shasum sum.js package.json)" = "$coach_original"
+check "coach did not run the project's tests"       test ! -e "$coachdir/RAN"
+check "coach 1 contains no fix"                     no_fix coach1.txt
+check "coach 2 contains no fix"                     no_fix coach2.txt
 
 echo
 [ "$fail" = 0 ] && echo "All checks passed." || echo "Some checks failed. Transcripts are in $work"
