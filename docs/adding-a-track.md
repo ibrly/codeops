@@ -33,7 +33,7 @@ Exercise numbers set the order learners see. If you insert one in the middle, re
 
 A track is a folder under `tracks/` with a `track.json`, an `exercises/` folder, and a `solutions/` folder. The helper scripts and `scripts/verify-exercises.mjs` discover tracks automatically, so **you don't need to change anything in `bin/`**.
 
-`track.json` has exactly four keys:
+`track.json` has four required keys and one optional one:
 
 ```json
 {
@@ -45,7 +45,10 @@ A track is a folder under `tracks/` with a `track.json`, an `exercises/` folder,
 ```
 
 - `test` is the command that runs an exercise's tests, written as a list of arguments (never a shell string). It runs from inside the exercise folder and must exit 0 only when every test passes.
-- `capstone` is the id of the exercise that, passed without the escape hatch, completes the track.
+- `capstone` is the id of the exercise that, passed without hints, completes the track.
+- `next` (optional) names the track a learner should move to after completing this one. It must exist.
+
+`node scripts/verify-exercises.mjs` checks the structure as well as the tests: only these keys in `track.json`, a capstone that's one of the exercises, exercises numbered `01`, `02`, … with no gaps, a `README.md` that shows the test command and a test file in every exercise, a `NOTES.md` in every solution, and no solution folders without an exercise.
 
 Before you build a track, **open an issue** with the "New exercise or track" template so we can agree on the audience and the end goal. Then:
 
@@ -53,6 +56,10 @@ Before you build a track, **open an issue** with the "New exercise or track" tem
 2. Keep the same rules: one concept per exercise, tests as the source of truth, no dependencies beyond the language's standard tooling, and solutions kept separate.
 3. If the track's language isn't already installed in CI, add a setup step for it to `.github/workflows/validate.yml` so `verify-exercises` can run its tests.
 4. Mention the track in the onboarding language question in `skills/start/SKILL.md`.
+
+## Add a second module
+
+A module is just another track that follows an earlier one. Build it once per language, with the language as a suffix except for JavaScript: for example `data` and `data-python`, following `foundations` and `foundations-python`. Then set `next` in the earlier track's `track.json` so learners who finish it are pointed to yours. Exercise ids start again at `01` in every track, and progress is kept per track, so nothing else needs to change.
 
 ## Search and fast-moving topics
 

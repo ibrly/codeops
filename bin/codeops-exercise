@@ -51,7 +51,14 @@ if (!arg || arg === "--list") {
     const status = p ? `${p.status}${p.attempts ? `, ${p.attempts} test run(s)` : ""}${p.taught ? ", taught" : ""}` : "not started";
     console.log(`${id === next ? "→" : " "} ${id.padEnd(20)} ${status}`);
   }
-  console.log(next ? `\nNext exercise: ${next}` : "\nAll exercises in this track are done.");
+  const capstone = done[track.capstone]?.status;
+  if (capstone === "passed") {
+    console.log(track.next ? `\nTrack complete. Next: codeops-exercise --track ${track.next}` : "\nTrack complete.");
+  } else if (capstone === "assisted" && !next) {
+    console.log(`\nCapstone assisted: redo it unaided on a later day with codeops-exercise --reset ${track.capstone}`);
+  } else {
+    console.log(`\nNext exercise: ${next ?? track.capstone}`);
+  }
   process.exit(0);
 }
 

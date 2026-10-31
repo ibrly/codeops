@@ -412,3 +412,58 @@ test("the capstone can be completed after an assisted attempt", () => {
   solve(cwd, "foundations", "10-capstone");
   assert.match(run(cwd, "codeops-check", "10").out, /10-capstone passed/);
 });
+
+// Runs verify-exercises against a copy of one real track with a deliberate mistake in it.
+function verifyFixture(mutate) {
+  const dir = mkdtempSync(join(tmpdir(), "codeops-tracks-"));
+  test.after(() => rmSync(dir, { recursive: true, force: true }));
+  cpSync(join(root, "tracks", "foundations"), join(dir, "foundations"), { recursive: true });
+  mutate(join(dir, "foundations"));
+  const { NODE_TEST_CONTEXT, ...env } = process.env;
+  return spawnSync(process.execPath, [join(root, "scripts", "verify-exercises.mjs")], {
+    encoding: "utf8",
+    env: { ...env, CODEOPS_TRACKS_DIR: dir },
+  });
+}
+
+test("verify-exercises catches structural mistakes in a track", () => {
+  const manifest = (dir) => join(dir, "track.json");
+  const editManifest = (change) => (dir) => {
+    const m = JSON.parse(readFileSync(manifest(dir), "utf8"));
+    change(m);
+    writeFileSync(manifest(dir), JSON.stringify(m));
+  };
+  const cases = [
+    [editManifest((m) => (m.colour = "blue")), /unknown key "colour"/],
+    [editManifest((m) => (m.capstone = "99-nope")), /capstone "99-nope" isn't one of the exercises/],
+    [editManifest((m) => (m.next = "nowhere")), /next track "nowhere" doesn't exist/],
+    [(d) => rmSync(join(d, "exercises", "05-arrays"), { recursive: true }), /gap or duplicate at 06-objects/],
+    [(d) => rmSync(join(d, "exercises", "03-loops", "README.md")), /03-loops: no README\.md/],
+    [(d) => rmSync(join(d, "exercises", "03-loops", "total.test.js")), /03-loops: no test file/],
+    [(d) => rmSync(join(d, "solutions", "03-loops", "NOTES.md")), /no solutions\/03-loops\/NOTES\.md/],
+    [(d) => mkdirSync(join(d, "solutions", "11-extra")), /solutions\/11-extra has no matching exercise/],
+  ];
+  for (const [mutate, expected] of cases) {
+    const r = verifyFixture(mutate);
+    assert.strictEqual(r.status, 1, String(expected));
+    assert.match(r.stderr, expected);
+  }
+});
+
+test("the list says what comes after the capstone", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "10");
+  assert.match(run(cwd, "codeops-exercise", "--list").out, /Next exercise: 01-values-and-types/);
+  run(cwd, "codeops-recall", "add", "--concept", "max", "--how", "hint", "--exercise", "10");
+  solve(cwd, "foundations", "10-capstone");
+  run(cwd, "codeops-check", "10");
+  const p = progress(cwd);
+  for (const id of readdirSync(join(root, "tracks", "foundations", "exercises"))) {
+    p.tracks.foundations.exercises[id] ??= { status: "passed", attempts: 1 };
+  }
+  writeFileSync(join(cwd, ".codeops", "progress.json"), JSON.stringify(p));
+  assert.match(run(cwd, "codeops-exercise", "--list").out, /Capstone assisted: redo it unaided/);
+  p.tracks.foundations.exercises["10-capstone"].status = "passed";
+  writeFileSync(join(cwd, ".codeops", "progress.json"), JSON.stringify(p));
+  assert.match(run(cwd, "codeops-exercise", "--list").out, /Track complete\./);
+});
