@@ -1,0 +1,6 @@
+{
+  "title": "Working with Data",
+  "language": "JavaScript",
+  "test": ["node", "--test"],
+  "capstone": "06-capstone"
+}

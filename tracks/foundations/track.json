@@ -1,6 +1,10 @@
 {
   "title": "Programming Foundations",
   "language": "JavaScript",
-  "test": ["node", "--test"],
-  "capstone": "10-capstone"
+  "test": [
+    "node",
+    "--test"
+  ],
+  "capstone": "10-capstone",
+  "next": "data"
 }
