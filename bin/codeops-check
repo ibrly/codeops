@@ -6,6 +6,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 const t = require(path.join(__dirname, "..", "lib", "tracks.js"));
 
+const usage = `Usage: codeops-check <exercise>
+  Runs that exercise's tests and records the result. <exercise> is its number or name,
+  like 3 or 03-loops. Example: codeops-check 3`;
+if (!process.argv[2] || ["--help", "-h"].includes(process.argv[2])) {
+  console.log(usage);
+  process.exit(process.argv[2] ? 0 : 1);
+}
+
 const cwd = t.learnerRoot(process.cwd());
 const progress = t.readProgress(cwd);
 const track = t.currentTrack(progress);
@@ -14,14 +22,14 @@ const n = String(arg ?? "").padStart(2, "0");
 const id = arg && track.ids.find((d) => d === arg || d.startsWith(n + "-"));
 const dir = id && path.join(t.workspace(cwd, track.name), id);
 if (!id || !fs.existsSync(dir)) {
-  console.error(`Exercise "${arg ?? ""}" isn't set up in ${track.name}. Run codeops-exercise <id> first.`);
+  console.error(`There's no exercise ${arg} set up in the ${track.name} track yet. Set it up first with: codeops-exercise ${arg}`);
   process.exit(1);
 }
 
 // Exercises the learner needed help on, from .codeops/mistakes.md. Entries name them as
 // "exercise: <track>/<id>"; the original JavaScript track also accepts a bare "<id>".
 // An escape-hatch entry makes a pass "assisted"; for the capstone, any help does.
-// Only help on the current attempt counts (entries without "attempt" belong to attempt 0), so a
+// Only help on the current copy counts ("fresh_copy: N", or "attempt: N" in older logs; none means 0), so a
 // reset and an unaided redo can earn "passed". A redo on the same day as an earlier escape hatch
 // doesn't count, because the answer is still fresh.
 function helpUsed(attempt) {
@@ -32,7 +40,7 @@ function helpUsed(attempt) {
   const prefix = track.name === t.defaultTrack ? `(?:${track.name}/)?` : `${track.name}/`;
   const pattern = new RegExp(`exercise:\\s*${prefix}${id}\\b`);
   const entries = text.split(/^- /m).filter((e) => pattern.test(e));
-  const attemptOf = (e) => Number(/attempt:\s*(\d+)/.exec(e)?.[1] ?? 0);
+  const attemptOf = (e) => Number(/(?:fresh_copy|attempt):\s*(\d+)/.exec(e)?.[1] ?? 0);
   const counts = (e) => id === track.capstone || /how:\s*escape hatch/.test(e);
   if (entries.some((e) => attemptOf(e) === attempt && counts(e))) return true;
   return entries.some((e) => attemptOf(e) < attempt && /how:\s*escape hatch/.test(e) && e.includes(`date: ${t.localDate()}`));

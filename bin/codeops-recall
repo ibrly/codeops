@@ -27,6 +27,17 @@ const today = localDate();
 
 const [action, nArg] = process.argv.slice(2);
 
+const usage = `Usage:
+  codeops-recall                     list the recall checks that are due today
+  codeops-recall pass <n>            the learner remembered check #n: space the next one further out
+  codeops-recall miss <n>            the learner didn't: bring check #n back tomorrow
+  codeops-recall add --concept "<what they needed help with>" --how "escape hatch|partial hint|hint"
+                     [--exercise <exercise> | --file <path>] [--guess "<their guess>"]`;
+if (["--help", "-h"].includes(action)) {
+  console.log(usage);
+  process.exit(0);
+}
+
 if (action === "add") {
   const opts = {};
   const rest = process.argv.slice(3);
@@ -63,7 +74,8 @@ if (action === "add") {
   }
   const clean = (s) => String(s).replace(/\s+/g, " ").trim();
   const lines = [`- concept: ${clean(opts.concept)}`];
-  if (exercise) lines.push(`  exercise: ${exercise}`, `  attempt: ${attempt}`);
+  // fresh_copy: how many times the exercise had been reset when this help was given (omitted when 0).
+  if (exercise) lines.push(`  exercise: ${exercise}`, ...(attempt ? [`  fresh_copy: ${attempt}`] : []));
   if (opts.file) lines.push(`  file: ${clean(opts.file)}`);
   lines.push(`  date: ${today}`, `  how: ${opts.how}`);
   if (opts.guess) lines.push(`  guess: ${JSON.stringify(clean(opts.guess))}`);
@@ -99,7 +111,7 @@ if (!action) {
 
 const n = Number(nArg);
 if (!["pass", "miss"].includes(action) || !Number.isInteger(n) || n < 1 || n > parts.length) {
-  console.error("Usage: codeops-recall [pass|miss <entry number>]");
+  console.error(usage);
   process.exit(1);
 }
 

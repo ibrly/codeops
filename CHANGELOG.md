@@ -2,6 +2,14 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Changed
+
+- **Clearer first steps.** The README explains how a session works (a code editor plus Claude Code, and running tests with the `!` prefix), and the tutor gives the exact `!` command and file for each exercise. Module headings show their track names.
+- Every helper has a `--help`, and a missing or wrong argument says what to do instead of printing empty quotes. The recall usage lists `add`.
+- The help log writes `fresh_copy: N` only after a reset, instead of an `attempt: 0` that read like a test-run count. Older `attempt:` entries still work.
+
 ## 0.6.0
 
 ### Fixed

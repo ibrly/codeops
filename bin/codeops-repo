@@ -7,6 +7,13 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
+if (["--help", "-h"].includes(process.argv[2])) {
+  console.log(`Usage:
+  codeops-repo            a read-only snapshot of this project: changed files, TODOs, how tests run
+  codeops-repo --staged   the changes staged for the next commit`);
+  process.exit(0);
+}
+
 const cwd = process.cwd();
 const safeGit = ["-c", "core.fsmonitor=false", "-c", "diff.external=", "--no-pager"];
 

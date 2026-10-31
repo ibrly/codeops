@@ -12,6 +12,23 @@ const t = require(path.join(__dirname, "..", "lib", "tracks.js"));
 
 const cwd = t.learnerRoot(process.cwd());
 const [arg, value] = process.argv.slice(2);
+
+if (["--help", "-h"].includes(arg)) {
+  console.log(`Usage:
+  codeops-exercise --list            show the exercises in your track and which one is next
+  codeops-exercise <exercise>        set up an exercise (its number or name, like 3 or 03-loops)
+  codeops-exercise --tracks          show every track you can switch to
+  codeops-exercise --track <name>    switch track, e.g. --track foundations-python
+  codeops-exercise --reset <exercise>   start an exercise again (your old copy is backed up)
+  codeops-exercise --taught <exercise>  record that you taught this concept back`);
+  process.exit(0);
+}
+for (const flag of ["--track", "--reset", "--taught"]) {
+  if (arg === flag && !value) {
+    console.error(`${flag} needs a value. Run codeops-exercise --help to see how to use it.`);
+    process.exit(1);
+  }
+}
 const progress = t.readProgress(cwd);
 
 if (arg === "--tracks") {

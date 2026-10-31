@@ -133,6 +133,8 @@ Quick check, on a different example. What does this program print?
 
 ## Programming Foundations
 
+Track names: `foundations` (JavaScript) · `foundations-python`
+
 Ten exercises about a small music-playlist program, in **JavaScript** or **Python**. Each one has one planted problem and tests that fail until you fix it. The Python track swaps in Python's own pitfalls where the languages differ, like `list.sort()` returning `None`.
 
 1. Values and types
@@ -148,6 +150,8 @@ Ten exercises about a small music-playlist program, in **JavaScript** or **Pytho
 
 ## Working with Data
 
+Track names: `data` (JavaScript) · `data-python`
+
 The second module, for learners who've finished Foundations. The tutor points you to it when your Foundations capstone passes. It has six exercises on the same playlist program:
 
 1. Returning early from a loop
@@ -158,6 +162,8 @@ The second module, for learners who've finished Foundations. The tutor points yo
 6. **Capstone:** merge two playlists without duplicates, from scratch
 
 ## Building a Program
+
+Track names: `program` (JavaScript) · `program-python`
 
 The third module, where the playlist code becomes a real program you run from the terminal:
 

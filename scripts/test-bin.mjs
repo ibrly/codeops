@@ -396,7 +396,7 @@ test("help logged on the new attempt still makes it assisted", () => {
   run(cwd, "codeops-exercise", "3");
   run(cwd, "codeops-exercise", "--reset", "3");
   run(cwd, "codeops-recall", "add", "--concept", "loops", "--how", "escape hatch", "--exercise", "3");
-  assert.match(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /attempt: 1/);
+  assert.match(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /fresh_copy: 1/);
   solve(cwd, "foundations", "03-loops");
   assert.match(run(cwd, "codeops-check", "3").out, /03-loops assisted/);
 });
@@ -595,4 +595,27 @@ test("verify-exercises catches language versions of a module drifting apart", ()
   const r = verify();
   assert.strictEqual(r.status, 1);
   assert.match(r.stderr, /only one language version names a next track/);
+});
+
+test("every helper explains itself with --help, and never prints empty quotes", () => {
+  const cwd = learner();
+  for (const name of ["codeops-check", "codeops-exercise", "codeops-recall", "codeops-repo"]) {
+    const r = run(cwd, name, "--help");
+    assert.strictEqual(r.status, 0, name);
+    assert.match(r.out, /^Usage/, name);
+  }
+  assert.match(run(cwd, "codeops-recall", "--help").out, /codeops-recall add/);
+  for (const args of [["codeops-check"], ["codeops-check", "4"], ["codeops-exercise", "--track"], ["codeops-exercise", "--reset"], ["codeops-recall", "pass"]]) {
+    const r = run(cwd, ...args);
+    assert.notStrictEqual(r.status, 0, args.join(" "));
+    assert.doesNotMatch(r.out, /""/, args.join(" "));
+  }
+});
+
+test("help logged before any reset doesn't write a confusing counter", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "3");
+  run(cwd, "codeops-check", "3");
+  run(cwd, "codeops-recall", "add", "--concept", "loops", "--how", "hint", "--exercise", "3");
+  assert.doesNotMatch(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /attempt|fresh_copy/);
 });
