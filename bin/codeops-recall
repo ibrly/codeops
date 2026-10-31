@@ -104,6 +104,11 @@ if (field(entry, "retired")) {
   console.error(`#${n} is already retired.`);
   process.exit(1);
 }
+const dueOn = field(entry, "due");
+if (dueOn && dueOn > today) {
+  console.error(`#${n} isn't due until ${dueOn}, so it can't be checked yet. Nothing was changed.`);
+  process.exit(1);
+}
 const current = Number(field(entry, "interval")) || 1;
 const next = action === "pass" ? (steps.find((s) => s > current) ?? steps.at(-1)) : 1;
 const setField = (e, name, value) =>

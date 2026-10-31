@@ -78,17 +78,22 @@ test("--track rejects unknown tracks", () => {
   assert.match(r.out, /No track "nope"/);
 });
 
-test("recall moves through 1, 3, 7 days and resets on a miss (original schedule)", () => {
+test("recall moves through 1, 3, 7 days and resets on a miss", () => {
   const cwd = learner();
   mkdirSync(join(cwd, ".codeops"));
-  writeFileSync(join(cwd, ".codeops", "mistakes.md"), "- concept: loops\n  interval: 1\n  due: 2000-01-01\n");
+  const file = join(cwd, ".codeops", "mistakes.md");
+  // Each check only counts once it's due, so move the due date back between checks.
+  const makeDue = () => writeFileSync(file, readFileSync(file, "utf8").replace(/due: .*/, "due: 2000-01-01"));
+  writeFileSync(file, "- concept: loops\n  interval: 1\n  due: 2000-01-01\n");
   assert.match(run(cwd, "codeops-recall").out, /#1\s+loops/);
   run(cwd, "codeops-recall", "pass", "1");
-  assert.match(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /interval: 3/);
+  assert.match(readFileSync(file, "utf8"), /interval: 3/);
+  makeDue();
   run(cwd, "codeops-recall", "pass", "1");
-  assert.match(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /interval: 7/);
+  assert.match(readFileSync(file, "utf8"), /interval: 7/);
+  makeDue();
   run(cwd, "codeops-recall", "miss", "1");
-  assert.match(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /interval: 1/);
+  assert.match(readFileSync(file, "utf8"), /interval: 1/);
   assert.match(run(cwd, "codeops-recall").out, /No recall checks due/);
 });
 
@@ -300,4 +305,17 @@ test("an unknown track in progress.json fails cleanly in every helper", () => {
     assert.match(r.out, /No track "frontend"/);
     assert.doesNotMatch(r.out, /TypeError|at Object/);
   }
+});
+
+test("recall can only be passed or missed once it's due", () => {
+  const cwd = learner();
+  run(cwd, "codeops-recall", "add", "--concept", "loops", "--how", "hint");
+  const file = join(cwd, ".codeops", "mistakes.md");
+  const before = readFileSync(file, "utf8");
+  for (const action of ["pass", "miss"]) {
+    const r = run(cwd, "codeops-recall", action, "1");
+    assert.strictEqual(r.status, 1);
+    assert.match(r.out, /isn't due until/);
+  }
+  assert.strictEqual(readFileSync(file, "utf8"), before);
 });
