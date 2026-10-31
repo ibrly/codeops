@@ -17,11 +17,6 @@ const fail = (where, problems) => {
   console.error(`FAIL  ${where}: ${problems.join("; ")}`);
 };
 
-const backlogFile = join(root, "scripts", "wrong-fixture-backlog.txt");
-const backlog = new Set(
-  (existsSync(backlogFile) ? readFileSync(backlogFile, "utf8") : "").split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#")),
-);
-
 // Structural rules every track must follow, so contributor mistakes fail CI with a clear message.
 function lint(track) {
   const problems = [];
@@ -67,12 +62,9 @@ function lint(track) {
     }
   }
 
-  // New exercises must ship at least one wrong/ fixture; older ones are listed in the backlog file.
+  // Every exercise ships at least one wrong/ fixture, which proves its tests are tight.
   for (const id of track.ids) {
-    const listed = backlog.has(`${track.name}/${id}`);
-    const hasWrong = existsSync(join(track.dir, "solutions", id, "wrong"));
-    if (!hasWrong && !listed) problems.push(`${id}: add at least one solutions/${id}/wrong/ fixture (a plausible fix that must fail)`);
-    if (hasWrong && listed) problems.push(`${id}: has wrong/ fixtures now, so remove it from scripts/wrong-fixture-backlog.txt`);
+    if (!existsSync(join(track.dir, "solutions", id, "wrong"))) problems.push(`${id}: add at least one solutions/${id}/wrong/ fixture (a plausible fix that must fail)`);
   }
 
   const solutions = join(track.dir, "solutions");

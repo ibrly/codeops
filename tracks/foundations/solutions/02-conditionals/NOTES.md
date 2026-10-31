@@ -2,3 +2,4 @@
 **Lesson:** an if/else-if chain stops at the first true condition; order the checks from most to least specific.
 **Accepted fixes:** reorder the branches, or make the first condition `stars >= 3 && stars < 5`.
 **Good hint (rung 3):** "Walk through the function with `stars = 5`. Which line runs first?"
+**Rejected (see `wrong/`):** reordering but writing `stars > 3` for "good" turns 3 stars into a skip.

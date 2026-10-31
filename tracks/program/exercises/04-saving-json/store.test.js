@@ -17,6 +17,14 @@ test("a saved playlist loads back the same", () => {
   assert.deepStrictEqual(loadPlaylist(file), playlist);
 });
 
+test("saving again replaces the old playlist, even with tricky values", () => {
+  const file = tempFile();
+  savePlaylist(file, [{ title: "Old", artist: "Sam", seconds: 60 }]);
+  const playlist = [{ title: "Don't Stop", artist: "Nina", seconds: 200, favorite: true, album: null }];
+  savePlaylist(file, playlist);
+  assert.deepStrictEqual(loadPlaylist(file), playlist);
+});
+
 test("an empty playlist round-trips too", () => {
   const file = tempFile();
   savePlaylist(file, []);

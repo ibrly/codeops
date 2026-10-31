@@ -16,6 +16,10 @@ test("reads one title per line", () => {
   assert.deepStrictEqual(readTitles(fileWith("Intro\nLong Road\nOutro\n")), ["Intro", "Long Road", "Outro"]);
 });
 
+test("keeps accented titles and skips lines of only spaces", () => {
+  assert.deepStrictEqual(readTitles(fileWith("Café\n   \nNiño\n")), ["Café", "Niño"]);
+});
+
 test("skips blank lines", () => {
   assert.deepStrictEqual(readTitles(fileWith("Intro\n\nOutro\n\n")), ["Intro", "Outro"]);
 });

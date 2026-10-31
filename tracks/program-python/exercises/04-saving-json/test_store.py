@@ -19,6 +19,13 @@ class TestStore(unittest.TestCase):
         save_playlist(path, playlist)
         self.assertEqual(load_playlist(path), playlist)
 
+    def test_saving_again_replaces_the_old_playlist_even_with_tricky_values(self):
+        path = temp_file()
+        save_playlist(path, [{"title": "Old", "artist": "Sam", "seconds": 60}])
+        playlist = [{"title": "Don't Stop", "artist": "Nina", "seconds": 200, "favorite": True, "album": None}]
+        save_playlist(path, playlist)
+        self.assertEqual(load_playlist(path), playlist)
+
     def test_an_empty_playlist_round_trips_too(self):
         path = temp_file()
         save_playlist(path, [])

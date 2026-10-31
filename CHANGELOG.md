@@ -2,6 +2,12 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Changed
+
+- **Every exercise now has a wrong-fix fixture** (44 of 44), and `verify-exercises` requires one. Filling in the remaining 38 found four more test holes, now closed in both languages: reading a file with the wrong encoding or keeping whitespace-only lines (03-reading-files), and saving by appending or by swapping quotes in Python's notation (04-saving-json).
+
 ## 0.8.0
 
 Smoke-tested: 47/47 checks, Claude Code 2.1.314, 2026-10-31.

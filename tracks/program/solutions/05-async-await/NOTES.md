@@ -3,3 +3,4 @@
 **Accepted fixes:** `const songs = await loadPlaylist(path)`, or `.then(...)`.
 **Good hint (rung 3):** "Add `console.log(songs)` before the reduce. What does it print?"
 **Uses:** child_process (the test runs total.js as a program).
+**Rejected (see `wrong/`):** `.then(...)` without `return` makes `totalSeconds` resolve to `undefined`.

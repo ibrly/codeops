@@ -18,7 +18,7 @@ That's why tests are the heart of every exercise. A test passing is the only thi
 3. **Create the solution folder** `tracks/foundations/solutions/NN-short-name/` with:
    - The fixed code file(s), with the same names as in the exercise.
    - `NOTES.md` for contributors and maintainers: the planted bug, the lesson, the fixes you'd accept, one good rung-3 hint, and a **`New in this exercise:`** line naming every construct a correct fix needs that no earlier exercise in the track taught. The exercise README must explain each of those, briefly, in its concept paragraph. Learners never see this folder.
-   - Optionally, `wrong/<name>/` folders, each holding a plausible fix that breaks the spec (same file names as the exercise). `verify-exercises` requires every one of them to **fail**, which proves your tests are tight. When you find a wrong fix that passes, add it here and tighten the test.
+   - At least one `wrong/<name>/` folder, each holding a plausible fix that breaks the spec (same file names as the exercise). `verify-exercises` requires every one of them to **fail**, which proves your tests are tight. When you find a wrong fix that passes, add it here and tighten the test.
 4. **Verify it:**
 
    ```bash

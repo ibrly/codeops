@@ -39,7 +39,7 @@ Exercise tests run on learners' own computers, so every new or changed exercise 
 - [ ] Tests write only to a temp folder, never to the learner's folder or home.
 - [ ] One concept per exercise, and the README doesn't describe the bug.
 - [ ] `NOTES.md` has the planted bug, accepted fixes, a rung-3 hint, and a `New in this exercise:` line.
-- [ ] At least one `solutions/<id>/wrong/` fixture: a plausible fix that must fail (`verify-exercises` enforces this for new exercises).
+- [ ] At least one `solutions/<id>/wrong/` fixture: a plausible fix that must fail (`verify-exercises` enforces this).
 - [ ] Someone tried it once as a learner with `/codeops:practice`.
 
 ## Ground rules

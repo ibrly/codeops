@@ -2,3 +2,4 @@
 **Lesson:** assignment doesn't copy arrays or objects; make a new array.
 **Accepted fixes:** `[...playlist, song]`, `playlist.concat([song])`, or `const copy = playlist.slice(); copy.push(song)`.
 **Good hint (rung 3):** "After `const copy = playlist`, try `console.log(copy === playlist)`."
+**Rejected (see `wrong/`):** `push` onto the original and then return a copy still changes the caller's array.

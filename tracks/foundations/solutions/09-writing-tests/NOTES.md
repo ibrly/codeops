@@ -3,3 +3,4 @@
 **Common first attempt:** a test that searches with the exact same casing (`"Nina"` for `"Nina"`). It passes on both versions, so the grader's third check fails. That's the teaching moment.
 **Good hint (rung 3):** "What input would behave differently in the two versions?"
 **Uses:** child_process (the grader runs the learner's test against a broken copy).
+**Rejected (see `wrong/`):** a test that searches with the same casing as the data passes on the case-sensitive copy too.

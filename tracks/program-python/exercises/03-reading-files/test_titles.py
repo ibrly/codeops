@@ -17,6 +17,9 @@ class TestReadTitles(unittest.TestCase):
     def test_reads_one_title_per_line(self):
         self.assertEqual(read_titles(file_with("Intro\nLong Road\nOutro\n")), ["Intro", "Long Road", "Outro"])
 
+    def test_keeps_accented_titles_and_skips_lines_of_only_spaces(self):
+        self.assertEqual(read_titles(file_with("Café\n   \nNiño\n")), ["Café", "Niño"])
+
     def test_skips_blank_lines(self):
         self.assertEqual(read_titles(file_with("Intro\n\nOutro\n\n")), ["Intro", "Outro"])
 

@@ -2,3 +2,4 @@
 **Lesson:** `return` exits the function, not just the loop; a "not found" answer belongs after the loop.
 **Accepted fixes:** remove the `else` branch; or use `playlist.some(...)`.
 **Good hint (rung 3):** "With the playlist in the test, how many songs does the loop look at before it returns?"
+**Rejected (see `wrong/`):** a `found` flag that is set to `false` on every non-match only reflects the last song.
