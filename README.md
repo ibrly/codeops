@@ -17,6 +17,16 @@ CodeOps flips the default. The tutor:
 - **Measures progress with evidence.** An exercise counts as passed only when its tests pass. If you needed the direct answer, it's recorded as *assisted*, not passed.
 - **Never edits your code.** It reads your files and runs your exercise's tests (in your own projects, you run them). You write every fix.
 
+### Words you'll see
+
+- **Exercise:** a small program with one bug planted in it, plus tests that fail until you fix it.
+- **Track:** a series of exercises in one language. Each one ends with a **capstone**, an exercise you write from scratch, without hints.
+- **Hint ladder:** the tutor's help in steps, from a question to the full answer.
+- **Escape hatch:** asking for the answer outright. You can, after a guess.
+- **Assisted:** an exercise you finished with the answer shown or, on a capstone, with a hint.
+- **Recall check:** a quick question, days later, on something you needed help with.
+- **Teach-back:** you explain a concept to the tutor, who plays a confused student.
+
 ## Quick start
 
 You need [Claude Code](https://code.claude.com/docs) (v2.1.275 or later) and [Node.js](https://nodejs.org/) 20 or later, which the helper scripts run on. For the Python track you also need [Python](https://www.python.org/) 3.10 or later.
@@ -79,8 +89,8 @@ CodeOps has no servers or account of its own, but the tutor is Claude, so a sess
 | `/codeops:review [path]` | A review of your code: up to three findings that point you at problems without fixing them |
 | `/codeops:progress` | Your honest progress: passed, assisted, and what's due for review |
 | `/codeops:teach [concept]` | Teach-back: the tutor plays a confused student, and you find and explain its mistake |
-| `/codeops:coach [file or error]` | Coaching on a bug or TODO in **your own project**. Run it from that project's folder. The tutor reads your code but never edits it or runs it: you run your own tests and paste the output |
-| `/codeops:explain` | Before you commit: explain your staged changes, one piece at a time, so you understand every line you ship, including code an AI wrote |
+| `/codeops:coach [file or error]` | *After Foundations.* Coaching on a bug or a TODO (a note in code about work still to do) in **your own project**. Run it from that project's folder. The tutor reads your code but never edits it or runs it: you run your own tests and paste the output |
+| `/codeops:explain` | *If you use git.* Before you commit (save a snapshot of your work): explain your staged changes (the ones you've marked for that commit), one piece at a time, so you understand every line you ship, including code an AI wrote |
 
 ## An example session
 
