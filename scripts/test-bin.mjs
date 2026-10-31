@@ -319,3 +319,15 @@ test("recall can only be passed or missed once it's due", () => {
   }
   assert.strictEqual(readFileSync(file, "utf8"), before);
 });
+
+test("failure output points at the learner's files, not the temp copy", () => {
+  for (const track of ["foundations", "foundations-python"]) {
+    const cwd = learner();
+    run(cwd, "codeops-exercise", "--track", track);
+    run(cwd, "codeops-exercise", "8");
+    const out = run(cwd, "codeops-check", "8").out;
+    const expected = track === "foundations" ? "count.js" : "count.py";
+    assert.match(out, new RegExp(`codeops-${track}[/\\\\]08-reading-errors[/\\\\]${expected.replace(".", "\\.")}`), track);
+    assert.doesNotMatch(out, /codeops-check-/, track);
+  }
+});
