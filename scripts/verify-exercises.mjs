@@ -100,14 +100,16 @@ for (const name of readdirSync(t.tracksDir)) {
 
     const problems = [];
     const expected = t.expectedTests(join(track.exercises, id));
-    const shipped = await t.runTests(track, work);
+    const files = readdirSync(join(track.exercises, id)).filter(t.isTestFile).sort();
+    const shipped = await t.runTests(track, work, files);
     if (shipped.missing) problems.push(shipped.output);
     else if (t.runPassed(track, shipped, expected)) problems.push("tests pass on the shipped code (nothing to fix)");
     if (!expected) problems.push("no test cases found in the shipped test files");
     if (!existsSync(solution)) problems.push("no solution folder");
     else if (!shipped.missing) {
       cpSync(solution, work, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") && !src.includes(`${join(solution, "wrong")}`) });
-      if (!t.runPassed(track, await t.runTests(track, work), expected)) problems.push("tests fail on the reference solution");
+      const reference = await t.runTests(track, work, files);
+      if (!t.runPassed(track, reference, expected)) problems.push(`tests fail on the reference solution, or don't run exactly the ${expected} test(s) counted in the test files`);
     }
     rmSync(work, { recursive: true, force: true });
 
@@ -117,8 +119,10 @@ for (const name of readdirSync(t.tracksDir)) {
     for (const name of existsSync(wrongDir) ? readdirSync(wrongDir) : []) {
       const attempt = mkdtempSync(join(tmpdir(), "codeops-verify-"));
       cpSync(join(track.exercises, id), attempt, { recursive: true });
+      // On top of the reference solution, so the wrong fix is the only thing that differs.
+      cpSync(solution, attempt, { recursive: true, filter: (src) => !src.endsWith("NOTES.md") && !src.startsWith(wrongDir) });
       cpSync(join(wrongDir, name), attempt, { recursive: true });
-      if (t.runPassed(track, await t.runTests(track, attempt), expected)) problems.push(`wrong fix "${name}" passes the tests`);
+      if (t.runPassed(track, await t.runTests(track, attempt, files), expected)) problems.push(`wrong fix "${name}" passes the tests`);
       rmSync(attempt, { recursive: true, force: true });
     }
 

@@ -4,6 +4,13 @@ All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plug
 
 ## Unreleased
 
+### Fixed
+
+- **Only the shipped tests count.** A second review found that an early exit plus an extra learner test file (or a skipped Python module plus a learner `test_mine.py`) could still record *passed*. The check now runs only the exercise's shipped test files and requires exactly their number of tests to pass, with none skipped.
+- The home-folder rule now holds when the home path's letter case differs (macOS, and Windows where `c:\` vs `C:\` is common).
+- On Windows, `--reset` copies and empties a folder that's in use instead of crashing, and progress writes retry briefly when another program has the file open.
+- CI requires each reference solution to run exactly the counted number of tests, and applies `wrong/` fixtures on top of the reference solution.
+
 ### Added
 
 - **Progress across every track.** `codeops-exercise --tracks` shows passed, assisted, and complete for each track the learner has started, and `/codeops:progress` reports on all of them, so finishing Foundations and moving on doesn't hide it.

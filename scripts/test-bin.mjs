@@ -521,16 +521,18 @@ test("a help entry logged while a check is running isn't lost", async () => {
   const cwd = learner();
   run(cwd, "codeops-exercise", "3");
   solve(cwd, "foundations", "03-loops");
-  // A learner-written extra test that takes a moment, so the check is still running when help is logged.
-  writeFileSync(join(cwd, "codeops-foundations", "03-loops", "slow.test.js"), 'require("node:test")("slow", async () => new Promise((r) => setTimeout(r, 1500)));\n');
+  // A correct solution that takes a moment to load, so the check is still running when help is logged.
+  const file = join(cwd, "codeops-foundations", "03-loops", "total.js");
+  writeFileSync(file, "const until = Date.now() + 1500;\nwhile (Date.now() < until) {}\n" + readFileSync(file, "utf8"));
   const { NODE_TEST_CONTEXT, ...env } = process.env;
   const { spawn } = await import("node:child_process");
   const check = spawn(process.execPath, [bin("codeops-check"), "3"], { cwd, env });
+  const closed = new Promise((r) => check.on("close", r));
   let out = "";
   check.stdout.on("data", (d) => (out += d));
   await new Promise((r) => setTimeout(r, 400));
   run(cwd, "codeops-recall", "add", "--concept", "loops", "--how", "escape hatch", "--exercise", "3");
-  await new Promise((r) => check.on("close", r));
+  await closed;
   assert.match(out, /03-loops assisted/);
   assert.strictEqual(progress(cwd).tracks.foundations.exercises["03-loops"].status, "assisted");
 });
@@ -659,4 +661,37 @@ test("verify-exercises flags undeclared network or process use, and missing wron
   });
   assert.strictEqual(sneaky.status, 1);
   assert.match(sneaky.stderr, /03-loops: total\.test\.js uses https; justify it/);
+});
+
+test("an early exit plus an extra learner test file can't fake a pass", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "1");
+  const dir = join(cwd, "codeops-foundations", "01-values-and-types");
+  writeFileSync(join(dir, "duration.js"), "process.exit(0);\n" + readFileSync(join(dir, "duration.js"), "utf8"));
+  writeFileSync(join(dir, "extra.test.js"), 'const test = require("node:test"); test("a", () => {}); test("b", () => {});\n');
+  assert.match(run(cwd, "codeops-check", "1").out, /01-values-and-types failing/);
+});
+
+test("a skipped module plus an extra Python test file can't fake a pass", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "--track", "foundations-python");
+  run(cwd, "codeops-exercise", "1");
+  const dir = join(cwd, "codeops-foundations-python", "01-values-and-types");
+  writeFileSync(join(dir, "duration.py"), 'import unittest\nraise unittest.SkipTest("x")\n');
+  writeFileSync(join(dir, "test_mine.py"), "import unittest\nclass T(unittest.TestCase):\n    def test_a(self): pass\n    def test_b(self): pass\n");
+  assert.match(run(cwd, "codeops-check", "1").out, /01-values-and-types failing/);
+});
+
+test("the home-folder rule holds when the home path's letter case differs", () => {
+  if (process.platform === "linux") return; // case-sensitive file system
+  const base = learner();
+  const home = join(base, "Home");
+  mkdirSync(join(home, ".codeops"), { recursive: true });
+  writeFileSync(join(home, ".codeops", "progress.json"), JSON.stringify({ track: "data", tracks: {} }));
+  const project = join(home, "proj");
+  mkdirSync(project);
+  const { NODE_TEST_CONTEXT, ...env } = process.env;
+  const lower = join(base, "home");
+  const r = spawnSync(process.execPath, [bin("codeops-exercise"), "--list"], { cwd: project, encoding: "utf8", env: { ...env, HOME: lower, USERPROFILE: lower } });
+  assert.match(r.stdout, /^Track: foundations/m, "the home folder's .codeops must not capture a folder below it");
 });

@@ -120,7 +120,16 @@ if (arg === "--reset") {
   while (fs.existsSync(path.join(backups, `${track.name}-${id}-${t.localDate()}-${n}`))) n++;
   const backup = path.join(backups, `${track.name}-${id}-${t.localDate()}-${n}`);
   fs.mkdirSync(backups, { recursive: true });
-  fs.renameSync(target, backup);
+  try {
+    fs.renameSync(target, backup);
+  } catch (err) {
+    // On Windows a folder that's open somewhere (a terminal inside it, an editor) can't be moved,
+    // so copy it to the backup and empty it instead.
+    if (!["EBUSY", "EPERM", "EXDEV", "EACCES"].includes(err.code)) throw err;
+    fs.cpSync(target, backup, { recursive: true });
+    for (const entry of fs.readdirSync(target)) fs.rmSync(path.join(target, entry), { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
   // A reset starts a new attempt: help logged on earlier attempts no longer counts against it.
   const entry = t.trackExercises(progress, track.name)[id];
   if (entry) entry.resets = (entry.resets || 0) + 1;

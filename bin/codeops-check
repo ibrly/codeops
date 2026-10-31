@@ -55,7 +55,7 @@ process.on("exit", () => {
 for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => process.exit(130));
 
 (async () => {
-  const run = await t.runTests(track, check.dir);
+  const run = await t.runTests(track, check.dir, check.files);
   if (run.missing) {
     console.error(run.output);
     process.exit(2);
