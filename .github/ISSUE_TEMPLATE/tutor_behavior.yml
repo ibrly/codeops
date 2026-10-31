@@ -1,0 +1,48 @@
+name: The tutor felt wrong
+description: The tutor gave away too much, too little, lectured, or broke one of its rules.
+labels: [teaching]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! Reports like this are the most useful thing you can send. They show where the [teaching contract](https://github.com/ibrly/codeops/blob/main/teaching/CONTRACT.md) doesn't hold up with a real learner.
+        **Please don't paste anything personal**, such as your `.codeops/` notes or code from a private project.
+  - type: input
+    id: command
+    attributes:
+      label: Which command were you using?
+      placeholder: "/codeops:practice 3"
+    validations:
+      required: true
+  - type: dropdown
+    id: rule
+    attributes:
+      label: Which part of the teaching contract did it break?
+      options:
+        - "1. The hint ladder (skipped ahead, or hinted at the wrong thing)"
+        - "2. The escape hatch (wouldn't give the answer, or gave it for free)"
+        - "3. Choosing a method (the approach didn't fit what I needed)"
+        - "4. Tone (lectured, condescending, too long, too many questions)"
+        - "5. Something it should never do (edited my code, ran my project, made up a result)"
+        - "Not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: reply
+    attributes:
+      label: What did the tutor say?
+      description: Paste the reply, trimmed to the part that felt wrong. Include what you said just before it if it helps.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What would have helped instead?
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: CodeOps and Claude Code versions
+      placeholder: "CodeOps 0.4.0 (from /plugin), Claude Code 2.1.314 (claude --version)"

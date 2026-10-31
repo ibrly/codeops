@@ -43,6 +43,18 @@ You need [Claude Code](https://code.claude.com/docs) (v2.1.275 or later) and [No
 
 The tutor asks about your goals, your experience, and whether you want to learn with JavaScript or Python, then you're off. The first time it runs one of its helper commands (`codeops-check` to run your tests, `codeops-recall` to schedule a review), Claude Code asks for permission. Choose the option to allow it from now on.
 
+## If something goes wrong
+
+| What you see | What to do |
+|---|---|
+| `/codeops:start` stops with `env: node: No such file or directory`, or the tutor says Node.js isn't installed | Install [Node.js](https://nodejs.org/) 20 or later, restart Claude Code, and run `/codeops:start` again. CodeOps' helper commands need it, whichever track you choose. |
+| `This track needs Python 3.10 or later` when choosing Python | Install Python from [python.org](https://www.python.org/downloads/), restart your terminal, and choose the Python track again. |
+| Claude Code asks permission to run `codeops-check`, `codeops-recall`, or `codeops-exercise` | These are CodeOps' own helpers: running your exercise's tests, scheduling a review, setting up an exercise. Allow them. Choosing "don't ask again" saves you the prompt next time. |
+| `/plugin install codeops --marketplace ibrly/codeops` isn't recognized | Your Claude Code is older than 2.1.275. Use the two-step install: `/plugin marketplace add ibrly/codeops`, then `/plugin install codeops@codeops`. Or update Claude Code. |
+| `.codeops/progress.json isn't valid JSON` | The progress file was damaged, and CodeOps stopped rather than overwrite it. Fix it, or move it aside to start progress fresh. |
+
+CodeOps has no servers or account of its own, but the tutor is Claude, so a session counts toward your Claude plan's usage like any other conversation.
+
 ## Commands
 
 | Command | What it does |
@@ -155,7 +167,7 @@ Ideas, roughly in priority order. Each will become an issue when someone picks i
 
 ## Contributing
 
-Contributions are welcome, including your first one. The most useful thing right now is to **try it as a learner and tell us where the tutor felt wrong**. Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started, and please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues: see [SECURITY.md](SECURITY.md).
+Contributions are welcome, including your first one. The most useful thing right now is to **try it as a learner and tell us where the tutor felt wrong**, using the ["The tutor felt wrong" issue form](https://github.com/ibrly/codeops/issues/new?template=tutor_behavior.yml). Its fields map to the five sections of the [teaching contract](teaching/CONTRACT.md). Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started, and please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues: see [SECURITY.md](SECURITY.md).
 
 ## License
 
