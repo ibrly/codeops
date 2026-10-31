@@ -24,6 +24,8 @@ Thanks for wanting to help! CodeOps is a project about learning, so first-time c
 
    If you have Claude Code, also run `claude plugin validate --strict .`, and for changes to skills or the contract, `scripts/smoke-test.sh`. The smoke test runs real tutoring sessions headlessly with your own Claude login, so it isn't part of CI.
 
+   **Why not `claude plugin eval`?** We tried it (Claude Code 2.1.314). Skills load in eval runs, but the plugin's `bin/` helpers aren't on the PATH there, so cases can't exercise `codeops-check` and the others. That held from both the home folder and a copy outside it. The only workaround is calling helpers by their full `${CLAUDE_PLUGIN_ROOT}/bin/...` path in every skill, which would put long, version-specific paths into learners' permission prompts. So `scripts/smoke-test.sh` stays the behavior test. If a later Claude Code puts plugin `bin/` on the PATH in eval runs, that's worth revisiting.
+
 5. **Open a pull request** and fill in the template. Small, clear PRs get reviewed fastest.
 
 Stuck on any step? Open a draft PR or an issue and ask. Questions are contributions too.
