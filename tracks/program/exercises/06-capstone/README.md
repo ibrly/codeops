@@ -1,6 +1,6 @@
 # 06 · Capstone: a real command-line program
 
-**This is the Building a Program capstone,** and your first complete program. There's no planted bug: `stats.js` is empty, and you write it from scratch using this module's skills: reading arguments, reading a file, and printing results. Your tutor will ask you questions to help you think it through, but won't point at problems, give hints, or show code. If you do take a hint, the capstone is recorded as *assisted*, and you can reset it and redo it on your own another day.
+**This is the Building a Program capstone,** and your first complete program. There's no planted bug: `stats.js` is empty, and you write it from scratch using this module's skills: reading arguments, reading a file, and printing results. Your tutor will mostly ask you questions to help you think it through. If you ask for help, it can point you to where to look or give a small nudge, but it won't show you any code or the answer. Any hint records the capstone as *assisted*. That's fine: you can reset it with a fresh copy and finish it on your own another day, which counts as completing it.
 
 **Goal.** Running
 

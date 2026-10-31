@@ -2,6 +2,17 @@
 
 All notable changes to CodeOps. Versions match `version` in `.claude-plugin/plugin.json`, and each release is tagged `codeops--v<version>`.
 
+## Unreleased
+
+### Fixed
+
+- **Tests that accepted wrong fixes.** A content audit found fixes that broke the spec but passed: comparing whole songs in the merge capstones, rethrowing after the error message in the JS stats capstone, an argv check instead of the `__main__` guard, and pre-filtering lines in the error-scope exercises. The tests now reject them, and each is kept as a `wrong/` fixture that CI requires to fail.
+- **One capstone rule everywhere.** The contract now states the capstone exception (help stops at rung 3, no code, any hint makes it assisted), and all capstone READMEs say the same thing.
+
+### Changed
+
+- The contract says skills may tighten its rules but never loosen them. The escape hatch logs before giving the answer, in one step. Practice asks one question per reply. Recall pacing is written down once.
+
 ## 0.5.0
 
 ### Added

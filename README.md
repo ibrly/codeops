@@ -121,7 +121,7 @@ Ten exercises about a small music-playlist program, in **JavaScript** or **Pytho
 7. Edge cases
 8. Reading error messages
 9. Writing your own test (your test has to catch a real bug)
-10. **Capstone:** write a function from scratch, with hints capped at "nudge" and no escape hatch. Passing it unassisted is what completing Foundations means.
+10. **Capstone:** write a function from scratch. The tutor can nudge but never shows code, and any hint marks it *assisted*. Passing it unassisted is what completing Foundations means.
 
 ## Working with Data
 
