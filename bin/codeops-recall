@@ -10,11 +10,13 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const file = path.join(process.cwd(), ".codeops", "mistakes.md");
+const t = require(path.join(__dirname, "..", "lib", "tracks.js"));
+const root = t.learnerRoot(process.cwd());
+const file = path.join(root, ".codeops", "mistakes.md");
 const steps = [1, 3, 7, 14, 30];
 const maxListed = 3;
 
-const { localDate } = require(path.join(__dirname, "..", "lib", "tracks.js"));
+const { localDate } = t;
 
 const text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
 // Each entry starts with "- " at the beginning of a line; anything before the first one is kept as-is.
@@ -26,7 +28,6 @@ const today = localDate();
 const [action, nArg] = process.argv.slice(2);
 
 if (action === "add") {
-  const t = require(path.join(__dirname, "..", "lib", "tracks.js"));
   const opts = {};
   const rest = process.argv.slice(3);
   for (let i = 0; i < rest.length; i += 2) opts[rest[i].replace(/^--/, "")] = rest[i + 1];
@@ -41,8 +42,8 @@ if (action === "add") {
   let exercise;
   let downgrade;
   if (opts.exercise) {
-    const progress = t.readProgress(process.cwd());
-    const track = t.loadTrack(t.activeTrack(progress));
+    const progress = t.readProgress(root);
+    const track = t.currentTrack(progress);
     const n = String(opts.exercise).padStart(2, "0");
     const id = track.ids.find((d) => d === opts.exercise || d.startsWith(n + "-"));
     if (!id) fail(`No exercise "${opts.exercise}" in ${track.name}.`);
@@ -52,7 +53,7 @@ if (action === "add") {
     if (entry?.status === "passed" && (opts.how === "escape hatch" || id === track.capstone)) {
       downgrade = () => {
         entry.status = "assisted";
-        t.writeProgress(process.cwd(), progress);
+        t.writeProgress(root, progress);
         console.log(`${exercise} is now recorded as assisted.`);
       };
     }
@@ -64,7 +65,7 @@ if (action === "add") {
   lines.push(`  date: ${today}`, `  how: ${opts.how}`);
   if (opts.guess) lines.push(`  guess: ${JSON.stringify(clean(opts.guess))}`);
   lines.push("  interval: 1", `  due: ${localDate(1)}`);
-  t.ensureDataDir(process.cwd());
+  t.ensureDataDir(root);
   const sep = text && !text.endsWith("\n") ? "\n" : "";
   fs.writeFileSync(file, text + sep + lines.join("\n") + "\n");
   console.log(`Logged "${clean(opts.concept)}"${exercise ? ` for ${exercise}` : ""}. First recall check on ${localDate(1)}.`);

@@ -275,3 +275,29 @@ test("an infinite loop can't hang the check, and nothing is left behind", () => 
   const leftover = spawnSync("pgrep", ["-f", "codeops-check-"], { encoding: "utf8" });
   if (leftover.status !== null && process.platform !== "win32") assert.strictEqual(leftover.stdout.trim(), "", "no test process may outlive the check");
 });
+
+test("helpers find the learner's root from inside an exercise folder", () => {
+  const cwd = learner();
+  run(cwd, "codeops-exercise", "4");
+  const inside = join(cwd, "codeops-foundations", "04-functions");
+  assert.strictEqual(run(inside, "codeops-recall", "add", "--concept", "return", "--how", "escape hatch", "--exercise", "4").status, 0);
+  assert.ok(!existsSync(join(inside, ".codeops")), "no stray .codeops inside the exercise");
+  assert.match(readFileSync(join(cwd, ".codeops", "mistakes.md"), "utf8"), /foundations\/04-functions/);
+  solve(cwd, "foundations", "04-functions");
+  assert.match(run(inside, "codeops-check", "4").out, /04-functions assisted/);
+  run(inside, "codeops-exercise", "3");
+  assert.ok(existsSync(join(cwd, "codeops-foundations", "03-loops")));
+  assert.ok(!existsSync(join(inside, "codeops-foundations")), "no nested workspace");
+});
+
+test("an unknown track in progress.json fails cleanly in every helper", () => {
+  const cwd = learner();
+  mkdirSync(join(cwd, ".codeops"));
+  writeFileSync(join(cwd, ".codeops", "progress.json"), JSON.stringify({ track: "frontend", tracks: {} }));
+  for (const args of [["codeops-exercise", "--list"], ["codeops-check", "1"], ["codeops-recall", "add", "--concept", "x", "--how", "hint", "--exercise", "1"]]) {
+    const r = run(cwd, ...args);
+    assert.strictEqual(r.status, 1, args.join(" "));
+    assert.match(r.out, /No track "frontend"/);
+    assert.doesNotMatch(r.out, /TypeError|at Object/);
+  }
+});
